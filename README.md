@@ -41,7 +41,7 @@ GitHub 저장소 이름: `realworker-task`
 - `supabase/schema.sql`은 테이블, RLS 정책, 관리자 권한 검사를 정의합니다. 현재 공개 프런트엔드에는 브라우저용 publishable key만 사용하며, secret/service-role key를 넣으면 안 됩니다.
 - Supabase 공개 가입이 꺼져 있으므로 멤버 계정은 앱의 관리자 초대 메뉴나 Supabase 대시보드에서 이메일 초대로 만듭니다. 관리자 지정은 Supabase에서 별도로 진행합니다.
 - 앱에서 보내는 멤버 초대는 `supabase/functions/invite-member` Edge Function을 사용합니다. 함수는 로그인 세션과 `is_app_admin()` 권한을 서버에서 확인한 뒤 초대하며, 초대된 계정은 일반 멤버입니다. 관리자 권한은 자동 부여되지 않습니다.
-- Edge Function은 `supabase functions deploy invite-member --project-ref ztwctxsddydkdblgubbj`로 배포하고, Supabase Function Secrets에 `INVITE_ALLOWED_ORIGINS`를 실제 앱의 정확한 origin(예: `https://realworker-task-r6na2f096-yeinvisions-projects.vercel.app`)으로 등록해야 합니다. Supabase의 함수 기본 환경 변수로 제공되는 service-role key는 서버 함수에서만 사용합니다.
+- Edge Function은 `supabase functions deploy invite-member --project-ref ztwctxsddydkdblgubbj`로 배포하고, Supabase Function Secrets의 `INVITE_ALLOWED_ORIGINS`에는 운영 도메인 `https://realworker-task.vercel.app`을 등록해야 합니다. Vercel의 배포별 미리보기 주소를 쓸 때는 그 origin도 정확히 추가해야 합니다. Supabase의 함수 기본 환경 변수로 제공되는 service-role key는 서버 함수에서만 사용합니다.
 - 단일 정적 HTML이므로 Supabase URL과 publishable key는 `index.html`에 포함됩니다. 데이터 보안은 비밀 키가 아니라 RLS 정책에 의존합니다.
 - 말씀은 퍼블릭 도메인 KJV를 바탕으로 절 전체를 한국어로 옮긴 비공식 자체 번역이며, 각 절의 KJV 출처를 연결합니다.
 - 경조사 Excel 권장 열은 `멤버명`, `날짜`, `종류`입니다. 생일 날짜는 `월/일`도 가능하며 매년 표시합니다. 다른 경조사는 연도를 포함해 입력하고 해당 날짜에 한 번 표시합니다. 입사 기념일은 가져오지 않습니다.

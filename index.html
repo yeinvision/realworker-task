@@ -1390,7 +1390,7 @@
       function renderInvites() {
         content.innerHTML = `<section class="profile-page">
           <h1>멤버 초대</h1>
-          <p>리얼워크 이메일로 초대 메일을 보내 새 멤버가 비밀번호를 설정하고 로그인할 수 있게 해요.</p>
+          <p>리얼워크 이메일로 초대 메일을 보내요. 초대된 멤버는 링크를 눌러 비밀번호 없이 접속할 수 있어요.</p>
           <section class="card card-pad">
             ${isAppAdmin ? `<form data-form="invite-member">
               <div class="field"><label for="inviteEmail">초대할 멤버 이메일</label><input id="inviteEmail" name="email" type="email" maxlength="254" placeholder="name@realwork.group" autocomplete="email" required></div>
@@ -1843,7 +1843,7 @@
               throw new Error(message);
             }
             if (!result?.success) throw new Error("초대 기능에서 성공 응답을 받지 못했습니다.");
-            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 메일을 열어 비밀번호를 설정하도록 안내해주세요.`;
+            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 메일의 초대 링크를 눌러 비밀번호 없이 접속하면 돼요.`;
             form.reset();
             showToast("초대 메일을 전송했어요.");
           } catch (error) {

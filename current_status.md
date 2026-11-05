@@ -14,12 +14,13 @@
 - 개인 데이터는 `member_data`에 계정별로 저장하고, 공유 경조사는 인증 멤버 조회·관리자 변경만 허용한다.
 - Supabase 공개 이메일 가입을 끄고 이메일 확인을 켰다. Vercel 사이트 URL과 정확한 리다이렉트 URL을 등록했다.
 - `index.html`은 Supabase 이메일 링크 인증과 사용자별 클라우드 저장/동기화, 공유 경조사 조회·관리 기능을 사용한다. publishable key만 프런트엔드에 포함하며 secret/service-role key는 사용하지 않는다.
-- 로그인 화면에서 비밀번호 입력을 없애고, 초대 링크 접속 및 기존 초대 사용자 전용 이메일 로그인 링크 방식으로 변경했다. 새 인증 흐름은 배포 후 별도 실계정 테스트가 필요하다.
+- 로그인 화면에서 비밀번호 입력을 없애고, 초대 링크 접속 및 기존 초대 사용자 전용 이메일 로그인 링크 방식으로 변경했다. 실제 이메일 발송은 Supabase 한도/SMTP 설정 확인이 필요하다.
 - 사용자가 지정한 `eden@realwork.group` 초대를 생성했고, Auth에서 `invited_at`이 설정된 것을 확인했다. 계정은 아직 초대 수락 전(`confirmed_at` 없음)이다.
 - `ian@realwork.group` 초대 계정도 Auth에 생성됐고, `invited_at`이 설정된 것을 확인했다. 다만 초대 요청은 Supabase 이메일 발송 한도 초과 오류를 반환해 실제 메일 전송은 확인되지 않았다.
 - 두 계정 UUID를 `app_admins`에 등록하고, 이메일과 관리자 UUID가 일치하는 조회 결과를 확인했다.
-- `supabase/functions/invite-member`에 관리자 검증 후 초대 이메일을 보내는 Edge Function을 추가하고 Supabase에 배포했다. `INVITE_ALLOWED_ORIGINS`에 실제 Vercel origin을 등록했고, 함수 내부에서 로그인 사용자와 관리자 권한을 다시 확인하도록 JWT gateway 검증은 끄고 자체 검증을 사용한다.
-- 코드 변경분은 아직 GitHub/Vercel에 배포하지 않았다.
+- `supabase/functions/invite-member`에 관리자 검증 후 초대 이메일을 보내는 Edge Function을 추가하고 Supabase에 배포했다. 함수 내부에서 로그인 사용자와 관리자 권한을 다시 확인하도록 JWT gateway 검증은 끄고 자체 검증을 사용한다.
+- 초대 요청의 CORS 실패는 Vercel 배포별 origin이 Supabase `INVITE_ALLOWED_ORIGINS`에서 빠져 발생했다. 운영 도메인 `https://realworker-task.vercel.app`, 현재 배포 주소 및 기존 배포 주소를 허용 목록에 등록한 뒤 두 주소의 preflight 200과 비로그인 POST의 401을 확인했다.
+- 초대 화면 설명을 비밀번호 없는 이메일 링크 방식에 맞게 수정했다.
 
 ## 반영한 요청
 
@@ -65,7 +66,7 @@
 
 ## 검증 및 다음 확인 항목
 
-- 두 계정의 초대 이메일 수신 여부, 초대 수락, 비밀번호 설정 및 실제 로그인 (Ian은 이메일 발송 한도 오류 해결 후 초대 메일 재전송 필요)
+- 두 계정의 초대 이메일 수신 여부, 초대 수락 및 실제 로그인 (Ian은 이메일 발송 한도 오류 해결 후 초대 메일 재전송 필요)
 - 앱 프런트엔드 변경을 GitHub/Vercel에 배포한 뒤 관리자 계정으로 실제 멤버 초대 요청 확인
 - Supabase 기본 이메일 발송 한도 오류가 재발하지 않도록 SMTP 설정을 확인하고 실제 초대 메일 수신/수락 검증
 - 개인 데이터가 계정별로 분리되고 재로그인/다른 기기에서 동기화되는지 확인
