@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0a0c0c">
+  <title>리얼워크 일잘러노트</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0a0c0c;
+      --sidebar: #060707;
+      --card: #131716;
+      --card-muted: #1a1f1e;
+      --ink: #e8eeec;
+      --muted: #8c9794;
+      --faint: #5a6462;
+      --line: #242b29;
+      --line-soft: #1c2120;
+      --accent: #00ccaa;
+      --accent-dark: #00b898;
+      --on-accent: #03201a;
+      --accent-soft: rgba(0, 204, 170, .13);
+      --shadow: 0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px rgba(0,0,0,.35);
+      --input: #0e1211;
+      --input-focus: #101514;
+      --hover: #202726;
+      --sunk: #0f1211;
+      --teal-ink: #a9d8cd;
+      --profile-card: #0c1714;
+      --danger: #ff6b5e;
+      --p-s: #ff6b5e;
+      --p-a: #f0b45a;
+      --p-b: #6fa8ff;
+      --p-c: #9b7bea;
+      --week-ink: #fff;
+      --week-muted: #e6eeeb;
+    }
+    html[data-theme="light"] {
+      color-scheme: light;
+      --page: #f2f5f4;
+      --sidebar: #e7edeb;
+      --card: #fff;
+      --card-muted: #f5f8f7;
+      --ink: #121716;
+      --muted: #5d6966;
+      --faint: #99a4a1;
+      --line: #dce3e1;
+      --line-soft: #ebf0ee;
+      --accent: #00a88c;
+      --accent-dark: #008f77;
+      --on-accent: #fff;
+      --accent-soft: rgba(0, 168, 140, .12);
+      --shadow: 0 1px 2px rgba(18,23,22,.04), 0 4px 16px rgba(18,23,22,.05);
+      --input: #fafcfb;
+      --input-focus: #fff;
+      --hover: #eff4f2;
+      --sunk: #f4f6f5;
+      --teal-ink: #347b6d;
+      --profile-card: #142823;
+      --danger: #c64d43;
+      --p-s: #d2463a;
+      --p-a: #b5741c;
+      --p-b: #2f6fd6;
+      --p-c: #7a5bd0;
+      --week-ink: #17211e;
+      --week-muted: #53615c;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--page);
+      color: var(--ink);
+      font: 14px/1.55 "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, textarea { font: inherit; }
+    button { color: inherit; }
+    .hidden { display: none !important; }
+    .login-screen {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(380px, .82fr);
+      background: var(--page);
+    }
+    .login-art {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100vh;
+      padding: 48px clamp(36px, 7vw, 100px);
+      overflow: hidden;
+      color: #eaf8f5;
+      background: #0a0c0c;
+      position: relative;
+    }
+    .login-art:before, .login-art:after {
+      content: "";
+      position: absolute;
+      border: 1px solid rgba(0, 204, 170, .17);
+      border-radius: 50%;
+      width: 530px;
+      height: 530px;
+      right: -150px;
+      top: 17%;
+    }
+    .login-art:after { width: 390px; height: 390px; right: -80px; top: 25%; }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 750; letter-spacing: -.3px; }
+    .brand-mark {
+      display: block;
+      width: 150px;
+      height: auto;
+    }
+    .brand.compact .brand-mark { width: 126px; }
+    .login-copy { position: relative; z-index: 1; max-width: 510px; margin: auto 0; padding: 50px 0; }
+    .eyebrow { color: #68d9c3; font-size: 12px; font-weight: 800; letter-spacing: 1.6px; text-transform: uppercase; }
+    .login-copy h1 { margin: 14px 0 18px; font-size: clamp(36px, 5vw, 60px); line-height: 1.2; letter-spacing: -2.6px; }
+    .login-copy p { margin: 0; max-width: 430px; color: #b7c9c4; font-size: 16px; }
+    .login-note { position: relative; z-index: 1; color: #93aaa4; font-size: 12px; }
+    .login-panel { display: grid; place-items: center; padding: 36px; }
+    .login-form { width: min(100%, 390px); }
+    .login-form h2 { margin: 0 0 8px; font-size: 26px; letter-spacing: -.8px; }
+    .login-form .sub { margin: 0 0 30px; color: var(--muted); }
+    .field { display: grid; gap: 8px; margin: 16px 0; }
+    .field label { font-size: 13px; font-weight: 700; }
+    .field input, .field textarea, .composer input, .composer select {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      outline: none;
+      background: var(--input);
+      color: var(--ink);
+      transition: border-color .16s, box-shadow .16s;
+    }
+    .field input { height: 46px; padding: 0 13px; }
+    .field textarea { min-height: 92px; padding: 11px 13px; resize: vertical; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(0, 168, 140, .12); }
+    .primary, .secondary, .quiet, .icon-btn {
+      border: 0;
+      cursor: pointer;
+      transition: background .16s, color .16s, transform .16s;
+    }
+    .primary {
+      width: 100%;
+      min-height: 47px;
+      margin-top: 10px;
+      border-radius: 10px;
+      background: var(--accent);
+      color: var(--on-accent);
+      font-weight: 750;
+    }
+    .primary:hover { background: var(--accent-dark); }
+    .demo-hint { margin: 15px 0 0; color: var(--muted); text-align: center; font-size: 11px; line-height: 1.7; }
+    .form-error { min-height: 18px; margin: 8px 0 0; color: #c64d43; font-size: 12px; }
+
+    .app-shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
+    .sidebar {
+      position: sticky;
+      top: 0;
+      display: flex;
+      height: 100vh;
+      flex-direction: column;
+      padding: 26px 18px 18px;
+      border-right: 1px solid var(--line);
+      background: var(--sidebar);
+    }
+    .sidebar .brand { padding: 0 10px 34px; }
+    .sidebar .brand-mark { width: 126px; }
+    .nav-label { padding: 0 11px; margin: 0 0 8px; color: #9aa39f; font-size: 10px; font-weight: 800; letter-spacing: 1.3px; }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      height: 43px;
+      padding: 0 12px;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: var(--muted);
+      text-align: left;
+      cursor: pointer;
+    }
+    .nav button:hover { background: var(--hover); color: var(--ink); }
+    .nav button.active { background: var(--accent-soft); color: var(--accent-dark); font-weight: 750; }
+    .nav-icon { display: grid; width: 20px; place-items: center; font-size: 17px; }
+    .sidebar-bottom { margin-top: auto; }
+    .profile-mini {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 13px 10px;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+    .avatar { display: grid; flex: none; width: 35px; height: 35px; place-items: center; overflow: hidden; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 800; object-fit: cover; }
+    .profile-mini strong, .profile-mini small { display: block; overflow: hidden; max-width: 148px; text-overflow: ellipsis; white-space: nowrap; }
+    .profile-mini strong { font-size: 12px; }
+    .profile-mini small { color: var(--muted); font-size: 10px; }
+    .logout { width: 100%; padding: 10px; border-radius: 8px; background: transparent; color: var(--muted); text-align: left; font-size: 12px; }
+    .logout:hover { background: var(--hover); color: var(--ink); }
+    main { min-width: 0; padding: 34px clamp(22px, 4vw, 62px) 60px; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; max-width: 1100px; margin: 0 auto 34px; }
+    .topbar .crumb { color: var(--muted); font-size: 12px; }
+    .topbar .today-label { margin-top: 3px; font-weight: 700; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .saved-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+    .saved-dot { width: 7px; height: 7px; border-radius: 50%; background: #42b98d; }
+    .icon-btn { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); }
+    .icon-btn:hover { background: var(--hover); }
+    .content { max-width: 1100px; margin: 0 auto; }
+    .greeting { display: flex; justify-content: space-between; align-items: end; gap: 22px; margin-bottom: 24px; }
+    .greeting h1 { margin: 0 0 5px; font-size: clamp(25px, 3vw, 34px); letter-spacing: -1.3px; }
+    .greeting p { margin: 0; color: var(--muted); }
+    .period-tag { padding: 8px 12px; border-radius: 20px; background: var(--accent-soft); color: var(--accent-dark); font-size: 12px; font-weight: 750; white-space: nowrap; }
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(270px, .9fr); gap: 20px; align-items: start; }
+    .stack { display: grid; gap: 18px; }
+    .card { min-width: 0; border: 1px solid var(--line); border-radius: 14px; background: var(--card); box-shadow: var(--shadow); }
+    .card-pad { padding: 21px; }
+    .card-heading { display: flex; align-items: start; justify-content: space-between; gap: 14px; margin-bottom: 17px; }
+    .card-heading h2, .card-heading h3 { margin: 0; font-size: 15px; letter-spacing: -.25px; }
+    .card-heading p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .text-link { padding: 0; border: 0; background: transparent; color: var(--accent-dark); font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+    .focus-box { display: block; min-width: 0; padding: 16px; border-radius: 11px; background: linear-gradient(115deg, var(--accent-soft), var(--card-muted)); }
+    .focus-box .focus-label { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; color: #54877c; font-size: 11px; font-weight: 750; }
+    .focus-box input { display: block; width: 100%; min-width: 0; height: 36px; padding: 0 2px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; outline: 0; background: transparent; color: var(--ink); font-weight: 650; }
+    .focus-box input::placeholder { color: var(--muted); font-weight: 500; }
+    .focus-keywords { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 14px; }
+    .focus-keyword { min-width: 0; }
+    .focus-keyword span { display: block; margin-bottom: 3px; color: var(--muted); font-size: 10px; }
+    .focus-keyword input { height: 32px; font-size: 12px; }
+    .wisdom-card { padding: 17px 19px; border-left: 3px solid var(--accent); }
+    .wisdom-topline { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .wisdom-card .wisdom-type { color: var(--accent-dark); font-size: 10px; font-weight: 800; }
+    .wisdom-modes { display: flex; gap: 3px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: var(--card-muted); }
+    .wisdom-mode { min-height: 27px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; color: var(--muted); font-size: 10px; font-weight: 650; cursor: pointer; }
+    .wisdom-mode:hover { color: var(--ink); }
+    .wisdom-mode.active { background: var(--accent); color: var(--on-accent); font-weight: 800; }
+    .wisdom-card blockquote { margin: 7px 0 5px; font-size: 14px; font-weight: 600; line-height: 1.7; }
+    .wisdom-card .wisdom-source { color: var(--muted); font-size: 10px; text-decoration: none; }
+    .wisdom-card a.wisdom-source:hover { color: var(--accent-dark); text-decoration: underline; }
+    .top-wisdom { max-width: 1100px; margin: -17px auto 24px; }
+    .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .stat { padding: 14px; border: 1px solid var(--line); border-radius: 11px; }
+    .stat span { display: block; color: var(--muted); font-size: 11px; }
+    .stat strong { display: block; margin-top: 3px; font-size: 20px; letter-spacing: -.6px; }
+    .stat small { color: var(--muted); font-size: 10px; }
+    .progress-track { height: 5px; margin-top: 10px; overflow: hidden; border-radius: 9px; background: var(--line); }
+    .progress-track i { display: block; height: 100%; border-radius: inherit; background: var(--accent); transition: width .2s; }
+    .profile-card { padding: 20px; background: var(--profile-card); color: #f1f8f5; }
+    .profile-card .card-heading { margin-bottom: 15px; }
+    .profile-card .card-heading p { color: #a4bbb3; }
+    .profile-card .text-link { color: #68d9c3; }
+    .profile-info { display: grid; gap: 10px; }
+    .profile-info div { display: flex; justify-content: space-between; gap: 10px; font-size: 12px; }
+    .profile-info span { color: #a4bbb3; }
+    .profile-info strong { text-align: right; font-weight: 650; }
+    .profile-work { margin-top: 15px; padding-top: 13px; border-top: 1px solid rgba(255,255,255,.12); }
+    .profile-work span { color: #a4bbb3; font-size: 11px; }
+    .profile-work p { margin: 5px 0 0; color: #e6f1ed; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
+    .list { display: grid; gap: 3px; }
+    .task-row { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 5px 3px; border-bottom: 1px solid var(--line-soft); }
+    .task-row:last-child { border-bottom: 0; }
+    .task-check { display: grid; flex: none; width: 19px; height: 19px; margin: 0; place-items: center; border: 1.5px solid #cbd4d0; border-radius: 6px; appearance: none; cursor: pointer; }
+    .task-check:checked { border-color: var(--accent); background: var(--accent); }
+    .task-check:checked:after { content: "✓"; color: #fff; font-size: 12px; font-weight: 800; }
+    .task-time { flex: none; min-width: 43px; color: #82908a; font-size: 11px; font-variant-numeric: tabular-nums; }
+    .task-text { flex: 1; min-width: 0; height: 34px; padding: 0 4px; border: 1px solid transparent; border-radius: 6px; outline: 0; background: transparent; color: inherit; }
+    .task-text:hover, .task-text:focus { border-color: var(--line); background: var(--input); }
+    .task-row.done .task-text { color: var(--faint); text-decoration: line-through; }
+    .task-priority { flex: none; width: 66px; height: 31px; padding: 0 5px; border: 1px solid var(--line); border-radius: 7px; background: var(--input); color: var(--ink); font-size: 11px; }
+    .delete-task { width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: #a6afab; cursor: pointer; opacity: 0; }
+    .task-row:hover .delete-task, .delete-task:focus-visible { opacity: 1; }
+    .delete-task:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
+    .empty { padding: 20px 10px; color: #939d99; text-align: center; font-size: 12px; }
+    .composer { display: flex; gap: 8px; margin-top: 13px; }
+    .composer input, .composer select { flex: 1; height: 38px; padding: 0 11px; background: var(--input); font-size: 12px; }
+    .composer select { flex: none; width: 76px; }
+    .composer input[type=time] { flex: none; width: 95px; }
+    .add-btn { flex: none; min-width: 40px; padding: 0 12px; border: 0; border-radius: 9px; background: var(--accent-soft); color: var(--accent-dark); font-size: 12px; font-weight: 800; cursor: pointer; }
+    .add-btn:hover { background: #d3f0e9; }
+    .schedule-view { display: grid; gap: 18px; }
+    .schedule-title { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
+    .schedule-title h1 { margin: 0 0 4px; font-size: 30px; letter-spacing: -1px; }
+    .schedule-title p { margin: 0; color: var(--muted); }
+    .period-nav { display: flex; align-items: center; gap: 8px; }
+    .period-nav strong { min-width: 142px; text-align: center; font-size: 13px; }
+    .period-nav .icon-btn { width: 32px; height: 32px; }
+    .week-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+    .day-pill { min-width: 0; min-height: 172px; padding: 12px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--week-ink); text-align: left; cursor: pointer; }
+    .day-pill:hover { background: var(--hover); }
+    .day-pill span { display: block; color: var(--week-muted); font-size: 12px; font-weight: 700; }
+    .day-pill strong { display: block; margin: 4px 0 8px; color: var(--week-ink); font-size: 20px; }
+    .day-pill small { display: -webkit-box; overflow: hidden; margin-top: 4px; color: var(--week-muted); font-size: 12px; font-weight: 600; line-height: 1.4; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+    .day-pill.today { border-color: var(--accent); background: var(--accent-soft); }
+    .day-pill.today span, .day-pill.today strong, .day-pill.today small { color: var(--week-ink); }
+    .day-pill.selected { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .week-selected .card-heading { align-items: center; }
+    .memo-search { width: 100%; height: 42px; margin: 0 0 16px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; outline: none; background: var(--input); color: var(--ink); }
+    .memo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 12px; }
+    .memo-card { display: flex; min-width: 0; min-height: 160px; flex-direction: column; padding: 15px; border: 1px solid var(--line); border-radius: 11px; background: var(--card-muted); }
+    .memo-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .memo-card-head time { color: var(--muted); font-size: 10px; }
+    .memo-card .delete-task { flex: none; opacity: 1; }
+    .memo-preview { display: -webkit-box; overflow: hidden; margin: 10px 0 0; color: var(--ink); font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+    .memo-grid-empty { grid-column: 1 / -1; }
+    .schedule-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
+    .schedule-side { display: grid; gap: 13px; }
+    .tip { padding: 16px; border-radius: 12px; background: var(--card-muted); color: var(--muted); font-size: 12px; }
+    .tip strong { display: block; margin-bottom: 5px; color: var(--ink); }
+    .profile-page { max-width: 720px; margin: 0 auto; }
+    .profile-page .card { padding: 24px; }
+    .profile-page h1 { margin: 0 0 7px; font-size: 28px; letter-spacing: -1px; }
+    .profile-page > p { margin: 0 0 23px; color: var(--muted); }
+    .profile-page .field { margin: 17px 0; }
+    .profile-page input { height: 43px; padding: 0 12px; }
+    .profile-page .field textarea { min-height: 110px; }
+    .profile-page .primary { width: auto; min-width: 130px; padding: 0 18px; }
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: 10; padding: 11px 15px; border-radius: 9px; background: #213b33; color: #fff; font-size: 12px; box-shadow: var(--shadow); animation: appear .18s ease-out; }
+    @keyframes appear { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 900px) {
+      .app-shell { grid-template-columns: 72px minmax(0, 1fr); }
+      .sidebar { align-items: center; padding: 20px 10px 12px; }
+      .sidebar .brand { padding: 0 0 28px; }
+      .sidebar .brand > span:last-child, .nav-label, .nav button > span:last-child, .profile-mini > div, .logout { display: none; }
+      .nav button { justify-content: center; width: 48px; padding: 0; }
+      .nav-icon { font-size: 19px; }
+      .profile-mini { padding: 14px 0; }
+      .schedule-layout { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 650px) {
+      .login-screen { grid-template-columns: 1fr; }
+      .login-art { min-height: 34vh; padding: 22px 25px; }
+      .login-art:before { top: -150px; right: -180px; }
+      .login-art:after { top: -100px; right: -100px; }
+      .login-copy { padding: 30px 0 10px; }
+      .login-copy h1 { font-size: 35px; letter-spacing: -1.5px; }
+      .login-copy p { font-size: 13px; }
+      .login-note { display: none; }
+      .login-panel { padding: 29px 24px 40px; }
+      .app-shell { display: block; padding-bottom: 63px; }
+      .sidebar { position: fixed; z-index: 5; top: auto; right: 0; bottom: 0; left: 0; display: block; width: 100%; height: 62px; padding: 5px 8px max(5px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); border-right: 0; }
+      .sidebar .brand, .sidebar-bottom { display: none; }
+      .nav { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+      .nav button { display: grid; width: 100%; height: 50px; justify-items: center; align-content: center; gap: 0; border-radius: 8px; }
+      .nav button > span:last-child { display: block; font-size: 9px; }
+      .nav-icon { height: 23px; font-size: 16px; }
+      main { padding: 20px 16px 32px; }
+      .topbar { margin-bottom: 25px; }
+      .greeting { align-items: start; }
+      .greeting h1 { font-size: 25px; }
+      .period-tag { padding: 7px 9px; font-size: 10px; }
+      .dashboard-grid { grid-template-columns: minmax(0, 1fr); }
+      .stat-row { gap: 7px; }
+      .stat { padding: 11px 9px; }
+      .stat strong { font-size: 18px; }
+      .week-strip { gap: 5px; }
+      .day-pill { padding: 9px 3px; }
+      .schedule-title { align-items: start; flex-direction: column; }
+      .schedule-title h1 { font-size: 26px; }
+      .schedule-view { gap: 14px; }
+      .card-pad { padding: 17px; }
+      .delete-task { opacity: 1; }
+      .composer input[type=time] { width: 82px; }
+      .period-nav { width: 100%; justify-content: space-between; }
+    }
+    .theme-toggle { font-size: 17px; }
+    .saved-label { white-space: nowrap; }
+    .priority-badge { flex: none; min-width: 23px; padding: 2px 6px; border-radius: 6px; background: color-mix(in srgb, var(--priority-color) 16%, transparent); color: var(--priority-color); text-align: center; font-size: 10px; font-weight: 800; }
+    .priority-s { --priority-color: var(--p-s); }
+    .priority-a { --priority-color: var(--p-a); }
+    .priority-b { --priority-color: var(--p-b); }
+    .priority-c { --priority-color: var(--p-c); }
+    .calendar-card { overflow: hidden; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
+    .calendar-weekday { padding: 10px 4px; color: var(--muted); text-align: center; font-size: 11px; font-weight: 700; }
+    .calendar-cell { position: relative; min-width: 0; min-height: 126px; padding: 9px; border: 0; border-top: 1px solid var(--line); border-right: 1px solid var(--line); background: var(--card); text-align: left; cursor: pointer; }
+    .calendar-cell:hover { background: var(--hover); }
+    .calendar-cell.outside { color: var(--faint); background: var(--sunk); }
+    .calendar-cell.selected { z-index: 1; outline: 2px solid var(--accent); outline-offset: -2px; background: var(--accent-soft); }
+    .calendar-cell.today .calendar-date { display: inline-grid; min-width: 24px; height: 24px; padding: 0 5px; place-items: center; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-weight: 800; }
+    .calendar-date { display: inline-block; margin-bottom: 5px; font-size: 12px; }
+    .calendar-event { display: block; overflow: hidden; margin: 3px 0; padding: 3px 5px; border-radius: 4px; background: var(--accent-soft); color: var(--accent); font-size: 10px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+    .calendar-event.priority-s { background: color-mix(in srgb, var(--p-s) 22%, transparent); color: var(--p-s); }
+    .calendar-event.priority-a { background: color-mix(in srgb, var(--p-a) 22%, transparent); color: var(--p-a); }
+    .calendar-event.priority-b { background: color-mix(in srgb, var(--p-b) 22%, transparent); color: var(--p-b); }
+    .calendar-event.priority-c { background: color-mix(in srgb, var(--p-c) 22%, transparent); color: var(--p-c); }
+    .calendar-event.done { color: var(--muted); text-decoration: line-through; opacity: .7; }
+    .calendar-more { display: block; color: var(--muted); font-size: 9px; }
+    .calendar-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; align-items: start; }
+    .calendar-panel { padding: 18px; }
+    .calendar-selected { position: sticky; top: 20px; }
+    .calendar-selected .card-heading { align-items: center; }
+    .photo-picker { display: flex; align-items: center; gap: 16px; }
+    .photo-preview { width: 82px; height: 82px; flex: none; display: grid; place-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-size: 24px; font-weight: 800; object-fit: cover; }
+    .photo-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
+    .secondary { min-height: 35px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--card-muted); font-size: 12px; }
+    .secondary:hover { background: var(--hover); }
+    .excel-upload { display: inline-flex; min-height: 36px; align-items: center; padding: 0 11px; cursor: pointer; }
+    .photo-help { width: 100%; margin: 0; color: var(--muted); font-size: 11px; }
+    .anniversary-list, .memo-list { display: grid; gap: 8px; }
+    .anniversary-list { max-height: 260px; overflow-y: auto; padding-right: 3px; }
+    .anniversary-row { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid var(--line-soft); border-radius: 9px; }
+    .anniversary-date { flex: none; width: 45px; color: var(--accent); font-size: 12px; font-weight: 800; text-align: center; }
+    .anniversary-info { flex: 1; min-width: 0; }
+    .anniversary-info strong, .anniversary-info small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .anniversary-info small { color: var(--muted); font-size: 10px; }
+    .quick-form { display: grid; gap: 9px; }
+    .quick-form textarea { width: 100%; min-height: 100px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; outline: none; background: var(--input); color: var(--ink); resize: vertical; }
+    .quick-form .add-btn { justify-self: end; min-height: 36px; }
+    .memo-row { display: flex; align-items: start; gap: 10px; padding: 12px 0; border-top: 1px solid var(--line-soft); }
+    .memo-body { flex: 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+    .memo-body time { display: block; margin-bottom: 5px; color: var(--muted); font-size: 10px; }
+    .anniversary-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; margin-bottom: 14px; }
+    .anniversary-form input, .anniversary-form select { min-width: 0; height: 37px; padding: 0 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--input); color: var(--ink); }
+    .anniversary-form .add-btn { min-height: 37px; }
+    .welcome-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: grid;
+      width: 100%;
+      max-width: none;
+      height: 100%;
+      max-height: none;
+      place-items: center;
+      padding: 24px;
+      overflow: auto;
+      border: 0;
+      background: #101514;
+      color: #fff;
+    }
+    .welcome-splash:not([open]) { display: none; }
+    .welcome-splash[open] { animation: splash-backdrop .28s ease-out both; }
+    .welcome-splash::backdrop { background: #101514; }
+    .welcome-scene { position: relative; display: grid; justify-items: center; gap: 18px; width: min(1050px, 100%); text-align: center; }
+    .welcome-kicker { color: #9ff0dd; font-size: 12px; font-weight: 850; letter-spacing: 2px; }
+    .welcome-photo {
+      position: relative;
+      width: 100%;
+      overflow: hidden;
+      border: 5px solid #fff;
+      border-radius: 13px;
+      background: #7aaac1;
+      box-shadow: 12px 12px 0 #f4e843, 0 22px 65px rgba(0,0,0,.4);
+      transform: rotate(-1deg);
+      animation: splash-photo .85s cubic-bezier(.15, .85, .25, 1.25) both;
+    }
+    .welcome-photo::after {
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(255,255,255,.25);
+      background-image: radial-gradient(rgba(18, 30, 30, .23) .8px, transparent .8px);
+      background-size: 5px 5px;
+      content: "";
+      mix-blend-mode: soft-light;
+      pointer-events: none;
+    }
+    .welcome-photo img { display: block; width: 100%; aspect-ratio: 2.03 / 1; object-fit: cover; filter: saturate(1.14) contrast(1.04); }
+    .welcome-burst {
+      position: absolute;
+      z-index: 1;
+      top: -25px;
+      right: -20px;
+      display: grid;
+      width: 108px;
+      aspect-ratio: 1;
+      place-items: center;
+      padding: 12px;
+      clip-path: polygon(50% 0%, 61% 24%, 87% 10%, 79% 37%, 100% 50%, 77% 62%, 91% 89%, 62% 78%, 50% 100%, 38% 77%, 9% 91%, 22% 62%, 0% 50%, 23% 38%, 10% 12%, 39% 23%);
+      background: #ff765e;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      line-height: 1.15;
+      text-shadow: 1px 2px 0 rgba(0,0,0,.18);
+      transform: rotate(9deg) scale(0);
+      animation: splash-sticker .48s .42s cubic-bezier(.2, 1.5, .4, 1) forwards;
+    }
+    .welcome-copy { display: grid; justify-items: center; gap: 6px; animation: splash-copy .45s .2s ease-out both; }
+    .welcome-copy h1 { margin: 0; color: #f4e843; font-size: clamp(24px, 4vw, 42px); font-weight: 900; letter-spacing: -.8px; line-height: 1.25; text-shadow: 2px 3px 0 #d76547; }
+    .welcome-copy p { margin: 0; color: #d7e5df; font-size: 14px; }
+    .welcome-actions { display: flex; justify-content: center; gap: 10px; margin-top: 5px; }
+    .welcome-start { min-height: 44px; padding: 0 22px; border: 0; border-radius: 999px; background: #f4e843; color: #17201d; font-weight: 850; box-shadow: 0 4px 0 #d3b92e; cursor: pointer; }
+    .welcome-start:hover { background: #fff36a; transform: translateY(-1px); }
+    .welcome-skip { min-height: 44px; padding: 0 15px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: transparent; color: #e4efea; cursor: pointer; }
+    .welcome-skip:hover { background: rgba(255,255,255,.1); }
+    @keyframes splash-backdrop { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes splash-photo { 0% { opacity: 0; transform: translateY(28px) rotate(5deg) scale(.72); } 75% { opacity: 1; transform: translateY(-5px) rotate(-2deg) scale(1.02); } 100% { opacity: 1; transform: translateY(0) rotate(-1deg) scale(1); } }
+    @keyframes splash-sticker { to { transform: rotate(9deg) scale(1); } }
+    @keyframes splash-copy { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    @media (max-width: 650px) {
+      .welcome-splash { padding: 24px 18px; }
+      .welcome-scene { gap: 15px; }
+      .welcome-photo { border-width: 4px; box-shadow: 7px 8px 0 #f4e843, 0 14px 40px rgba(0,0,0,.4); }
+      .welcome-burst { top: -22px; right: -12px; width: 76px; font-size: 11px; }
+      .welcome-copy p { max-width: 290px; font-size: 12px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .welcome-splash[open], .welcome-photo, .welcome-burst, .welcome-copy { animation: none; }
+      .welcome-burst { transform: rotate(9deg) scale(1); }
+      .welcome-start { transition: none; }
+    }
+    @media (max-width: 1050px) {
+      .calendar-layout { grid-template-columns: minmax(0, 1fr) 270px; }
+      .calendar-cell { min-height: 110px; padding: 6px; }
+    }
+    @media (max-width: 900px) {
+      .sidebar .brand { display: none; }
+      .calendar-layout { grid-template-columns: minmax(0, 1fr); }
+      .calendar-selected { position: static; }
+    }
+    @media (max-width: 650px) {
+      .nav { grid-template-columns: repeat(6, 1fr); }
+      .calendar-panel { padding: 10px; }
+      .calendar-cell { min-height: 88px; padding: 4px; }
+      .calendar-date { margin-bottom: 2px; font-size: 10px; }
+      .calendar-event { height: 5px; margin: 2px 0; padding: 0; font-size: 0; }
+      .calendar-more { font-size: 8px; }
+      .anniversary-form { grid-template-columns: 1fr 1fr; }
+      .anniversary-form .add-btn { grid-column: 1 / -1; }
+      .topbar { gap: 8px; }
+      .saved-label { font-size: 0; }
+      .day-pill { min-height: 142px; padding: 8px 5px; }
+      .day-pill span { font-size: 10px; }
+      .day-pill strong { margin: 3px 0 5px; font-size: 16px; }
+      .day-pill small { font-size: 10px; }
+      .memo-grid { grid-template-columns: 1fr; }
+      .task-row { gap: 6px; }
+      .task-priority { width: 58px; }
+      .top-wisdom { margin: -9px auto 18px; }
+    }
+  </style>
+</head>
+<body>
+  <section id="loginScreen" class="login-screen">
+    <div class="login-art">
+      <div class="brand"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>MEMBER NOTE</span></div>
+      <div class="login-copy">
+        <div class="eyebrow">WORK, WITH CLARITY</div>
+        <h1>오늘의 일을<br>가볍게 정리해요.</h1>
+        <p>하루, 한 주, 한 달의 할 일을 한곳에서 보고<br>내 페이스에 맞게 체크해보세요.</p>
+      </div>
+      <div class="login-note">리얼워크 멤버를 위한 일잘러노트 프로토타입</div>
+    </div>
+    <div class="login-panel">
+      <form class="login-form" id="loginForm">
+        <div class="brand" style="margin-bottom:30px"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>일잘러노트</span></div>
+        <h2>반가워요, 멤버님</h2>
+        <p class="sub">이메일과 비밀번호를 입력해 시작해보세요.</p>
+        <div class="field">
+          <label for="loginEmail">이메일</label>
+          <input id="loginEmail" type="email" placeholder="name@realwork.co.kr" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="loginPassword">비밀번호</label>
+          <input id="loginPassword" type="password" placeholder="비밀번호 입력" autocomplete="current-password" required>
+        </div>
+        <p id="loginError" class="form-error" aria-live="polite"></p>
+        <button class="primary" type="submit">프로토타입 시작하기 <span aria-hidden="true">→</span></button>
+        <p class="demo-hint">프로토타입 데모입니다. 실제 인증은 진행되지 않으며,<br>입력한 비밀번호는 저장되지 않습니다.</p>
+      </form>
+    </div>
+  </section>
+
+  <div id="app" class="app-shell hidden">
+    <aside class="sidebar">
+      <div class="brand"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>일잘러노트</span></div>
+      <p class="nav-label">WORKSPACE</p>
+      <nav class="nav" aria-label="메인 메뉴">
+        <button type="button" class="active" data-page="today" aria-label="오늘"><span class="nav-icon">◷</span><span>오늘</span></button>
+        <button type="button" data-page="week" aria-label="주간 일정"><span class="nav-icon">▦</span><span>주간 일정</span></button>
+        <button type="button" data-page="month" aria-label="월간 일정"><span class="nav-icon">▣</span><span>월간 일정</span></button>
+        <button type="button" data-page="anniversaries" aria-label="멤버 경조사"><span class="nav-icon">♡</span><span>경조사</span></button>
+        <button type="button" data-page="memo" aria-label="빠른 메모"><span class="nav-icon">✎</span><span>빠른 메모</span></button>
+        <button type="button" data-page="profile" aria-label="내 프로필"><span class="nav-icon">♙</span><span>내 프로필</span></button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="profile-mini" id="profileShortcut" role="button" tabindex="0" aria-label="내 프로필 보기">
+          <span class="avatar" id="avatarLetter">멤</span>
+          <img class="avatar hidden" id="avatarPhoto" alt="">
+          <div><strong id="miniName">리얼워크 멤버</strong><small id="miniTenure">프로필을 채워주세요</small></div>
+        </div>
+        <button class="logout" type="button" id="logoutButton">↪ &nbsp;데모 로그아웃</button>
+      </div>
+    </aside>
+    <main>
+      <header class="topbar">
+        <div><div class="crumb">리얼워크 멤버 공유버전</div><div class="today-label" id="topDate"></div></div>
+        <div class="top-actions"><span class="saved-label"><i class="saved-dot"></i> 이 기기에 저장</span><button class="icon-btn theme-toggle" type="button" id="themeToggle" aria-label="밝은 배경으로 전환" title="밝은 배경으로 전환">☼</button><button class="icon-btn" type="button" id="topProfile" aria-label="프로필">♙</button></div>
+      </header>
+      <div id="topWisdom" class="top-wisdom"></div>
+      <div class="content" id="content"></div>
+    </main>
+  </div>
+  <dialog id="welcomeSplash" class="welcome-splash" aria-labelledby="welcomeTitle">
+    <div class="welcome-scene">
+      <div class="welcome-kicker">REALWORK · EAT, WORK & HAVE FUN</div>
+      <div class="welcome-photo">
+        <img src="realwork-team.png" alt="함께 포즈를 취하며 웃고 있는 리얼워크 멤버들">
+        <span class="welcome-burst" aria-hidden="true">오늘도<br>가보자고!</span>
+      </div>
+      <div class="welcome-copy">
+        <h1 id="welcomeTitle">좋은 에너지로, 오늘도 같이!</h1>
+        <p>반가워요, 리얼워크 멤버님. 오늘의 일잘러노트를 시작해볼까요?</p>
+        <div class="welcome-actions">
+          <button type="button" class="welcome-start" data-action="close-welcome">일잘러노트 시작하기 →</button>
+          <button type="button" class="welcome-skip" data-action="close-welcome">건너뛰기</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+  <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const DATA_KEY = "realwork-member-note-v1";
+      const SESSION_KEY = "realwork-member-demo-session";
+      const $ = (selector, root = document) => root.querySelector(selector);
+      const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+      const content = $("#content");
+      const today = new Date();
+      let page = "today";
+      let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+      let selectedDate = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
+      let toastTimer;
+      const savedTheme = localStorage.getItem("realwork-member-theme");
+      if (savedTheme === "light") document.documentElement.dataset.theme = "light";
+
+      const readData = () => {
+        try {
+          const parsed = JSON.parse(localStorage.getItem(DATA_KEY) || "{}");
+          const dailyPlans = { ...(parsed.dailyPlans || {}) };
+          Object.entries(parsed.focus || {}).forEach(([key, value]) => {
+            if (!dailyPlans[key]) dailyPlans[key] = { promise: typeof value === "string" ? value : "", keywords: [] };
+          });
+          Object.entries(dailyPlans).forEach(([key, value]) => {
+            dailyPlans[key] = {
+              promise: typeof value === "string" ? value : String(value?.promise || ""),
+              keywords: Array.isArray(value?.keywords) ? value.keywords.slice(0, 3).map(item => String(item || "")) : []
+            };
+            while (dailyPlans[key].keywords.length < 3) dailyPlans[key].keywords.push("");
+          });
+          return {
+            profile: { name: "", startDate: "", work: "", photo: "", ...(parsed.profile || {}) },
+            dailyPlans,
+            schedules: parsed.schedules || {},
+            anniversaries: Array.isArray(parsed.anniversaries) ? parsed.anniversaries.filter(item => !/입사|근속/.test(item.type || "")) : [],
+            memos: Array.isArray(parsed.memos) ? parsed.memos : [],
+            wisdomMode: ["rotate", "quote", "scripture"].includes(parsed.wisdomMode) ? parsed.wisdomMode : "rotate"
+          };
+        } catch (error) {
+          console.error("저장된 프로토타입 데이터를 읽지 못했습니다.", error);
+          return { profile: { name: "", startDate: "", work: "", photo: "" }, dailyPlans: {}, schedules: {}, anniversaries: [], memos: [], wisdomMode: "rotate" };
+        }
+      };
+      let data = readData();
+      const persist = () => {
+        try {
+          localStorage.setItem(DATA_KEY, JSON.stringify(data));
+          updateSidebar();
+        } catch (error) {
+          console.error("프로토타입 데이터를 저장하지 못했습니다.", error);
+          showToast("저장에 실패했어요. 브라우저 저장 공간을 확인해주세요.");
+        }
+      };
+      const pad = number => String(number).padStart(2, "0");
+      const dateKey = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const dateLabel = date => new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long", day: "numeric", weekday: "long" }).format(date);
+      const mondayOf = date => {
+        const result = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        result.setDate(result.getDate() - ((result.getDay() + 6) % 7));
+        return result;
+      };
+      const weekKey = date => dateKey(mondayOf(date));
+      const monthKey = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
+      const monthTasksFor = date => {
+        const prefix = monthKey(date);
+        return Object.entries(data.schedules)
+          .filter(([key]) => key.startsWith(prefix) && /^\d{4}-\d{2}-\d{2}$/.test(key))
+          .flatMap(([, tasks]) => tasks);
+      };
+      const weekLabel = date => {
+        const monday = mondayOf(date);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        const sameMonth = monday.getMonth() === sunday.getMonth();
+        return sameMonth
+          ? `${monday.getFullYear()}년 ${monday.getMonth() + 1}월 ${monday.getDate()}일 – ${sunday.getDate()}일`
+          : `${monday.getFullYear()}년 ${monday.getMonth() + 1}월 ${monday.getDate()}일 – ${sunday.getMonth() + 1}월 ${sunday.getDate()}일`;
+      };
+      const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
+      const scheduleFor = key => data.schedules[key] || (data.schedules[key] = []);
+      const tasksFor = key => data.schedules[key] || [];
+      const doneCount = tasks => tasks.filter(task => task.done).length;
+      const completion = tasks => tasks.length ? Math.round(doneCount(tasks) / tasks.length * 100) : 0;
+      const tenureText = startDate => {
+        if (!startDate) return "입사일을 등록해주세요";
+        const start = new Date(`${startDate}T00:00:00`);
+        if (Number.isNaN(start.getTime())) return "입사일을 등록해주세요";
+        let months = (today.getFullYear() - start.getFullYear()) * 12 + today.getMonth() - start.getMonth();
+        if (today.getDate() < start.getDate()) months -= 1;
+        if (months < 1) return "입사 1개월 미만";
+        const years = Math.floor(months / 12);
+        const remaining = months % 12;
+        return `리얼워크 ${years ? `${years}년 ` : ""}${remaining ? `${remaining}개월` : years ? "" : "0개월"}째`;
+      };
+      const scheduleKey = kind => kind === "day" ? dateKey(cursor) : weekKey(cursor);
+      const kindTitle = kind => ({ day: "오늘 할 일", week: "이번 주 할 일", month: "이번 달 할 일" })[kind];
+      const kindSubtitle = kind => ({ day: "오늘 챙기고 싶은 일을 편하게 적어보세요.", week: "이번 주에 마무리하고 싶은 일을 모아보세요.", month: "이번 달에 잊지 않고 챙길 일을 적어보세요." })[kind];
+      const priorityRank = { S: 0, A: 1, B: 2, C: 3 };
+      const priorityClass = priority => `priority-${String(priority || "B").toLowerCase()}`;
+      const dailyQuotes = [
+        "작은 진전도 쌓이면 분명한 변화가 됩니다.",
+        "중요한 일은 완벽한 순간보다 꾸준한 관심을 필요로 합니다.",
+        "오늘의 집중 하나가 내일의 여유를 만듭니다.",
+        "시작이 가벼울수록 한 걸음 더 나아가기 쉽습니다.",
+        "잘 듣는 태도는 좋은 협업의 첫걸음입니다.",
+        "우선순위를 정하면 마음도 한결 단순해집니다.",
+        "잠시 멈춰 살피는 시간도 앞으로 나아가는 일입니다.",
+        "작은 약속을 지키는 일이 신뢰를 만들어갑니다.",
+        "질문 하나가 막힌 일을 풀어내기도 합니다.",
+        "한 번에 하나씩 하면 복잡한 일도 길이 보입니다.",
+        "좋은 결과는 서로의 생각을 잇는 데서 시작됩니다.",
+        "기록은 잊지 않게 하고, 실천은 앞으로 가게 합니다.",
+        "정리된 마음은 더 나은 선택을 돕습니다.",
+        "모르는 것을 인정하는 용기가 배움의 문을 엽니다.",
+        "작은 개선을 알아보는 눈이 큰 변화를 이끕니다.",
+        "함께 나눈 책임은 함께 만든 결과로 이어집니다.",
+        "오늘 할 수 있는 한 가지에 마음을 두어보세요.",
+        "좋은 협업은 상대의 다음 걸음을 살피는 일입니다.",
+        "속도보다 방향을 먼저 확인하는 날도 필요합니다.",
+        "한 번 더 확인하는 습관이 마음의 여유를 만듭니다.",
+        "꾸준함은 눈에 띄지 않아도 실력을 키웁니다.",
+        "서로 다른 관점은 더 나은 답을 찾는 재료입니다.",
+        "미루던 일을 작게 나누면 시작할 수 있습니다.",
+        "충분히 쉬는 것도 오래 일하기 위한 선택입니다.",
+        "진행 상황을 나누면 막연함이 줄어듭니다.",
+        "좋은 계획은 실행하며 조금씩 다듬어집니다.",
+        "일의 의미를 떠올리면 다음 한 걸음이 보입니다.",
+        "작은 배려가 함께 일하는 하루를 바꿉니다.",
+        "해낸 일을 돌아보면 다음 도전의 힘을 얻습니다.",
+        "집중할 것을 고르고 나머지는 잠시 내려놓아도 됩니다.",
+        "기대치를 맞추는 대화가 불필요한 오해를 줄입니다.",
+        "반복되는 불편을 발견했다면 개선의 실마리를 찾은 셈입니다.",
+        "오늘의 성실함은 내일의 선택지를 넓혀줍니다.",
+        "좋은 생각은 나누고 다듬을 때 더 선명해집니다.",
+        "모든 일을 다 하기보다 중요한 일을 제대로 해보세요.",
+        "작은 마무리가 다음 시작을 편하게 합니다.",
+        "함께 만든 기준은 협업을 더 믿음직하게 합니다.",
+        "어려운 일도 첫 질문을 정하면 움직이기 시작합니다.",
+        "내 페이스를 지키는 것은 지속 가능한 일의 일부입니다.",
+        "고마움을 표현하면 좋은 협력이 오래 이어집니다.",
+        "오늘의 선택 하나가 일하는 방식을 조금씩 바꿉니다.",
+        "계획에 여백을 두면 예상 밖의 일에도 흔들림이 적습니다.",
+        "변화를 반기는 태도는 새로운 가능성을 발견하게 합니다.",
+        "한 번의 실수보다 다음에 어떻게 배우는지가 중요합니다.",
+        "도움을 주고받는 과정에서 팀의 힘이 자랍니다.",
+        "분명한 한 문장이 여러 사람의 시간을 아껴줍니다."
+      ];
+      const dailyScriptures = [
+        { reference: "시편 23:1", text: "여호와는 나의 목자시니, 내게 부족함이 없으리로다.", url: "https://www.biblegateway.com/passage/?search=Psalm%2023%3A1&version=KJV" },
+        { reference: "데살로니가전서 5:16", text: "항상 기뻐하라.", url: "https://www.biblegateway.com/passage/?search=1%20Thessalonians%205%3A16&version=KJV" },
+        { reference: "고린도전서 13:4", text: "사랑은 오래 참고 친절하며, 시기하지 않고 자랑하지 않으며 교만하지 아니하느니라.", url: "https://www.biblegateway.com/passage/?search=1%20Corinthians%2013%3A4&version=KJV" },
+        { reference: "빌립보서 4:13", text: "내게 능력 주시는 그리스도를 통하여 내가 모든 것을 할 수 있느니라.", url: "https://www.biblegateway.com/passage/?search=Philippians%204%3A13&version=KJV" },
+        { reference: "여호수아 1:9", text: "내가 네게 명령하지 아니하였느냐? 강하고 담대하라. 두려워하거나 낙심하지 말라. 네가 어디로 가든지 주 너의 하나님이 너와 함께하시느니라.", url: "https://www.biblegateway.com/passage/?search=Joshua%201%3A9&version=KJV" },
+        { reference: "이사야 41:10", text: "두려워하지 말라. 내가 너와 함께하느니라. 놀라지 말라. 나는 네 하나님이니라. 내가 너를 강하게 하며, 참으로 너를 도우리라. 참으로 내 의로운 오른손으로 너를 붙들리라.", url: "https://www.biblegateway.com/passage/?search=Isaiah%2041%3A10&version=KJV" },
+        { reference: "마태복음 11:28", text: "수고하고 무거운 짐을 진 너희 모두 내게로 오라. 내가 너희에게 쉼을 주리라.", url: "https://www.biblegateway.com/passage/?search=Matthew%2011%3A28&version=KJV" }
+      ];
+      const dailyWisdomFor = (date, mode = data.wisdomMode) => {
+        const quarter = Math.floor(date.getMonth() / 3);
+        const absoluteDay = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
+        const quarterStartDay = Math.floor(Date.UTC(date.getFullYear(), quarter * 3, 1) / 86400000);
+        const dayInQuarter = absoluteDay - quarterStartDay;
+        const rotatesToScripture = absoluteDay % 2 === 1;
+        const useScripture = mode === "scripture" || (mode === "rotate" && rotatesToScripture);
+        const collection = useScripture ? dailyScriptures : dailyQuotes;
+        const sourceIndex = (mode === "rotate" ? Math.floor(dayInQuarter / 2) : dayInQuarter) % collection.length;
+        return useScripture
+          ? { type: "성경 말씀", text: dailyScriptures[sourceIndex].text, source: `${dailyScriptures[sourceIndex].reference} · KJV 자체 번역`, url: dailyScriptures[sourceIndex].url }
+          : { type: "오늘의 문장", text: dailyQuotes[sourceIndex], source: "일잘러노트 문장" };
+      };
+      const dailyPlanFor = key => data.dailyPlans[key] || (data.dailyPlans[key] = { promise: "", keywords: ["", "", ""] });
+      const eventDate = value => {
+        if (value instanceof Date && !Number.isNaN(value.getTime())) {
+          return `${value.getUTCFullYear()}-${pad(value.getUTCMonth() + 1)}-${pad(value.getUTCDate())}`;
+        }
+        const text = String(value ?? "").trim();
+        const fullDate = text.match(/^(\d{4})[./년-]\s*(\d{1,2})[./월-]\s*(\d{1,2})일?$/);
+        if (fullDate) return `${fullDate[1]}-${pad(Number(fullDate[2]))}-${pad(Number(fullDate[3]))}`;
+        const monthFirstDate = text.match(/^(\d{1,2})[./-]\s*(\d{1,2})[./-]\s*(\d{4})$/);
+        if (monthFirstDate) return `${monthFirstDate[3]}-${pad(Number(monthFirstDate[1]))}-${pad(Number(monthFirstDate[2]))}`;
+        const shortDate = text.match(/^(\d{1,2})[./월-]\s*(\d{1,2})일?$/);
+        if (shortDate) return `${pad(Number(shortDate[1]))}-${pad(Number(shortDate[2]))}`;
+        return "";
+      };
+      const nextAnniversary = item => {
+        const date = eventDate(item.date);
+        const recurring = item.recurring || item.type === "생일";
+        const parts = date.split("-").map(Number);
+        const month = parts[parts.length - 2];
+        const day = parts[parts.length - 1];
+        if (!month || !day) return null;
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        if (!recurring) {
+          if (parts.length !== 3) return null;
+          const once = new Date(Number(date.slice(0, 4)), month - 1, day);
+          return once >= todayStart ? once : null;
+        }
+        let next = new Date(today.getFullYear(), month - 1, day);
+        if (next < todayStart) next = new Date(today.getFullYear() + 1, month - 1, day);
+        return next;
+      };
+      let xlsxPromise;
+      const loadXlsx = () => {
+        if (window.XLSX) return Promise.resolve(window.XLSX);
+        if (!xlsxPromise) {
+          xlsxPromise = new Promise((resolve, reject) => {
+            const script = document.createElement("script");
+            script.src = "https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js";
+            script.onload = () => {
+              if (window.XLSX) resolve(window.XLSX);
+              else {
+                xlsxPromise = null;
+                reject(new Error("엑셀 읽기 도구를 불러오지 못했습니다."));
+              }
+            };
+            script.onerror = () => {
+              xlsxPromise = null;
+              reject(new Error("엑셀 읽기 도구를 불러오지 못했습니다. 인터넷 연결을 확인해주세요."));
+            };
+            document.head.appendChild(script);
+          });
+        }
+        return xlsxPromise;
+      };
+      const normalizeHeader = value => String(value ?? "").replace(/\s+/g, "").toLowerCase();
+      const parseExcelDate = (value, xlsx, workbook) => {
+        if (value instanceof Date) return eventDate(value);
+        if (typeof value === "number") {
+          const parsed = xlsx.SSF.parse_date_code(value, { date1904: Boolean(workbook.Workbook?.WBProps?.date1904) });
+          return parsed ? `${pad(parsed.y)}-${pad(parsed.m)}-${pad(parsed.d)}` : "";
+        }
+        return eventDate(value);
+      };
+      const eventType = value => {
+        const text = String(value ?? "").trim();
+        if (/입사|근속/.test(text)) return "제외";
+        if (/생일|생년월일|birthday/i.test(text)) return "생일";
+        if (/결혼|혼인|웨딩/i.test(text)) return "결혼";
+        if (/출산|출생|돌잔치|백일/i.test(text)) return "출산";
+        if (/부고|조사|조의|별세|조문|장례/i.test(text)) return "조사";
+        return text ? "기타" : "기념일";
+      };
+      const anniversaryId = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      async function importAnniversaries(file) {
+        const status = $("#anniversaryImportStatus");
+        status.textContent = "엑셀 파일을 읽고 있어요.";
+        try {
+          const xlsx = await loadXlsx();
+          const workbook = xlsx.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+          const sheetName = workbook.SheetNames[0];
+          if (!sheetName) throw new Error("엑셀 파일에 시트가 없습니다.");
+          const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "", raw: true });
+          const headerAliases = {
+            member: ["이름", "성명", "성함", "멤버명", "멤버이름", "멤버", "직원명", "구성원", "member", "membername", "name"],
+            date: ["날짜", "일자", "경조사날짜", "경조일", "기념일", "date"],
+            type: ["종류", "경조사", "유형", "구분", "경조사종류", "기념일종류", "이벤트", "type", "event"]
+          };
+          const headerRow = rows.slice(0, 10).findIndex(row => row.some(cell => headerAliases.member.includes(normalizeHeader(cell))));
+          if (headerRow < 0) throw new Error("멤버 이름 열을 찾지 못했어요. 첫 행에 ‘멤버명’ 또는 ‘이름’ 열을 넣어주세요.");
+          const headers = rows[headerRow].map(normalizeHeader);
+          const memberIndex = headers.findIndex(header => headerAliases.member.includes(header));
+          const dateIndex = headers.findIndex(header => headerAliases.date.includes(header));
+          const typeIndex = headers.findIndex(header => headerAliases.type.includes(header));
+          const eventColumns = headers.map((header, index) => ({ header, index, type: eventType(header) }))
+            .filter(column => column.index !== memberIndex && !headerAliases.date.includes(column.header) && !headerAliases.type.includes(column.header) && column.type !== "기타" && column.type !== "제외");
+          const birthdayDateColumn = headers.findIndex(header => /^(생일|birthday)$/.test(header));
+          if (dateIndex < 0 && eventColumns.length === 0 && birthdayDateColumn < 0) {
+            throw new Error("날짜 열을 찾지 못했어요. ‘날짜’ 열이나 ‘생일·결혼·출산·조사’ 날짜 열을 넣어주세요.");
+          }
+          const imported = [];
+          const skippedRows = [];
+          for (let rowIndex = headerRow + 1; rowIndex < rows.length; rowIndex += 1) {
+            const row = rows[rowIndex];
+            const name = String(row[memberIndex] ?? "").trim();
+            if (!name && row.every(cell => cell === "")) continue;
+            if (!name) {
+              skippedRows.push(rowIndex + 1);
+              continue;
+            }
+            const addItem = (rawDate, rawType) => {
+              const type = eventType(rawType);
+              if (type === "제외") return false;
+              let date = parseExcelDate(rawDate, xlsx, workbook);
+              if (!date) return false;
+              if (type === "생일") date = date.slice(-5);
+              else if (date.length === 5) return false;
+              imported.push({ name, date, type, recurring: type === "생일" });
+              return true;
+            };
+            if (dateIndex >= 0) {
+              const rawDate = row[dateIndex];
+              if (rawDate === "" || rawDate == null) {
+                skippedRows.push(rowIndex + 1);
+                continue;
+              }
+              const fallbackType = birthdayDateColumn === dateIndex ? "생일" : "기념일";
+              if (!addItem(rawDate, typeIndex >= 0 ? row[typeIndex] || fallbackType : fallbackType)) skippedRows.push(rowIndex + 1);
+            } else {
+              let foundDate = false;
+              for (const column of eventColumns) {
+                const rawDate = row[column.index];
+                if (rawDate === "" || rawDate == null) continue;
+                if (addItem(rawDate, column.type)) foundDate = true;
+              }
+              if (!foundDate) skippedRows.push(rowIndex + 1);
+            }
+          }
+          let duplicates = 0;
+          let added = 0;
+          for (const item of imported) {
+            const exists = data.anniversaries.some(saved => saved.name === item.name && saved.date === item.date && saved.type === item.type);
+            if (exists) {
+              duplicates += 1;
+              continue;
+            }
+            data.anniversaries.push({ id: anniversaryId(), ...item });
+            added += 1;
+          }
+          persist();
+          render();
+          const skippedMessage = skippedRows.length ? ` · 건너뜀 ${skippedRows.length}행${skippedRows.length <= 8 ? ` (${skippedRows.join(", ")}행)` : ""}` : "";
+          showToast(`경조사 ${added}건 추가${duplicates ? ` · 중복 ${duplicates}건` : ""}${skippedMessage}`);
+        } catch (error) {
+          console.error("엑셀 경조사 파일을 읽지 못했습니다.", error);
+          status.textContent = error.message || "파일을 읽지 못했습니다.";
+          showToast(status.textContent);
+        } finally {
+          $("#anniversaryFile").value = "";
+        }
+      }
+      const photoDataUrl = file => new Promise((resolve, reject) => {
+        if (!file.type.startsWith("image/")) {
+          reject(new Error("사진 파일을 선택해주세요."));
+          return;
+        }
+        const image = new Image();
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("사진을 읽지 못했습니다."));
+        reader.onload = () => {
+          image.onerror = () => reject(new Error("사진을 열지 못했습니다."));
+          image.onload = () => {
+            const scale = Math.min(1, 640 / Math.max(image.naturalWidth, image.naturalHeight));
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+            canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+            canvas.getContext("2d").drawImage(image, 0, 0, canvas.width, canvas.height);
+            resolve(canvas.toDataURL("image/jpeg", .82));
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+
+      function showToast(message) {
+        const toast = $("#toast");
+        toast.textContent = message;
+        toast.classList.remove("hidden");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.add("hidden"), 2400);
+      }
+
+      function updateSidebar() {
+        const name = data.profile.name.trim() || "리얼워크 멤버";
+        $("#miniName").textContent = name;
+        $("#miniTenure").textContent = tenureText(data.profile.startDate);
+        $("#avatarLetter").textContent = name === "리얼워크 멤버" ? "멤" : name.slice(0, 1);
+        const avatarPhoto = $("#avatarPhoto");
+        if (data.profile.photo) {
+          avatarPhoto.src = data.profile.photo;
+          avatarPhoto.classList.remove("hidden");
+          $("#avatarLetter").classList.add("hidden");
+        } else {
+          avatarPhoto.removeAttribute("src");
+          avatarPhoto.classList.add("hidden");
+          $("#avatarLetter").classList.remove("hidden");
+        }
+      }
+
+      function taskList(kind, key, limit = Infinity) {
+        const tasks = tasksFor(key);
+        if (!tasks.length) return '<div class="empty">아직 등록한 일정이 없어요. 아래에서 추가해보세요.</div>';
+        const ordered = [...tasks].sort((a, b) => (priorityRank[a.priority || "B"] ?? 2) - (priorityRank[b.priority || "B"] ?? 2));
+        return `<div class="list">${ordered.slice(0, limit).map(task => `
+          <div class="task-row ${task.done ? "done" : ""}">
+            <input class="task-check" type="checkbox" data-action="toggle-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" ${task.done ? "checked" : ""} aria-label="${task.done ? "완료 취소" : "완료"}: ${escapeHtml(task.text)}">
+            <input class="task-text" type="text" maxlength="100" value="${escapeHtml(task.text)}" data-action="edit-task-text" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="할 일 내용 수정">
+            <select class="task-priority ${priorityClass(task.priority)}" data-action="edit-task-priority" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="우선순위 수정">
+              ${["S", "A", "B", "C"].map(priority => `<option value="${priority}" ${priority === (task.priority || "B") ? "selected" : ""}>${priority} 우선</option>`).join("")}
+            </select>
+            <button type="button" class="delete-task" data-action="delete-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="일정 삭제">×</button>
+          </div>`).join("")}</div>`;
+      }
+
+      function composer(kind, key) {
+        return `<form class="composer" data-form="add-task" data-kind="${kind}" data-key="${escapeHtml(key)}">
+          <input type="text" name="task" maxlength="100" placeholder="${kind === "day" ? "오늘 할 일 추가하기" : "할 일 추가하기"}" aria-label="새 일정" required>
+          <select name="priority" aria-label="우선순위"><option value="S">S 우선</option><option value="A">A 높음</option><option value="B" selected>B 보통</option><option value="C">C 낮음</option></select>
+          <button type="submit" class="add-btn" aria-label="일정 추가">추가</button>
+        </form>`;
+      }
+
+      function scheduleCard(kind, key, options = {}) {
+        const tasks = tasksFor(key);
+        const title = options.title || kindTitle(kind);
+        return `<section class="card card-pad">
+          <div class="card-heading">
+            <div><h2>${title}</h2><p>${options.subtitle || kindSubtitle(kind)}</p></div>
+            <span class="period-tag">${doneCount(tasks)} / ${tasks.length} 완료</span>
+          </div>
+          ${taskList(kind, key, options.limit)}
+          ${composer(kind, key)}
+        </section>`;
+      }
+
+      function dashboardAnniversaryCard() {
+        const key = dateKey(today);
+        const hasEvent = data.anniversaries.some(item => {
+          const date = eventDate(item.date);
+          return item.recurring || item.type === "생일" ? date.slice(-5) === key.slice(5) : date === key;
+        });
+        return `<section class="card card-pad">
+          <div class="card-heading"><div><h2>오늘 경조사</h2><p>${hasEvent ? "오늘 챙길 경조사가 있어요." : "오늘 예정된 경조사가 없어요."}</p></div><button class="text-link" type="button" data-page="anniversaries">경조사 관리 ↗</button></div>
+        </section>`;
+      }
+
+      function anniversaryManager() {
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const items = data.anniversaries.map(item => ({ ...item, next: nextAnniversary(item) }))
+          .sort((a, b) => (a.next || new Date(8640000000000000)) - (b.next || new Date(8640000000000000)));
+        const rows = items.length ? items.map(item => {
+          const daysUntil = item.next ? Math.round((item.next - todayStart) / 86400000) : null;
+          const isBirthday = item.type === "생일" || item.recurring;
+          const date = item.next || new Date(`${eventDate(item.date).length === 10 ? eventDate(item.date) : `${today.getFullYear()}-${eventDate(item.date)}`}T00:00:00`);
+          const status = daysUntil === null ? "지난 경조사" : daysUntil === 0 ? "오늘" : `${daysUntil}일 후`;
+          return `<div class="anniversary-row">
+            <span class="anniversary-date">${pad(date.getMonth() + 1)}.${pad(date.getDate())}</span>
+            <div class="anniversary-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.type || "기념일")} · ${status}${isBirthday ? " · 매년" : ""}</small></div>
+            <button type="button" class="delete-task" data-action="delete-anniversary" data-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)} 기념일 삭제">×</button>
+          </div>`;
+        }).join("") : '<div class="empty">아직 등록한 경조사가 없어요. 직접 추가하거나 Excel 파일을 가져와보세요.</div>';
+        return `<section class="card card-pad">
+          <div class="card-heading"><div><h2>멤버 경조사</h2><p>생일은 매년, 다른 경조사는 해당 날짜에 한 번 표시해요.</p></div><span class="period-tag">${data.anniversaries.length}건</span></div>
+          <form class="anniversary-form" data-form="add-anniversary">
+            <input name="name" maxlength="30" placeholder="멤버 이름" aria-label="멤버 이름" required>
+            <input name="date" type="date" aria-label="경조사 날짜" required>
+            <select name="type" aria-label="경조사 종류"><option>생일</option><option>결혼</option><option>출산</option><option>조사</option><option>기타</option></select>
+            <button class="add-btn" type="submit">추가</button>
+          </form>
+          <label class="secondary excel-upload" for="anniversaryFile">엑셀 파일 가져오기</label>
+          <input id="anniversaryFile" type="file" accept=".xlsx,.xls,.csv" class="hidden">
+          <p class="photo-help excel-help">권장 열: 멤버명, 날짜, 종류(생일·결혼·출산·조사). 또는 멤버명과 생일/결혼/출산/조사 날짜 열. 생일은 월/일, 다른 경조사는 연도 포함 날짜가 필요해요.</p>
+          <p id="anniversaryImportStatus" class="photo-help" aria-live="polite"></p>
+          <div class="anniversary-list">${rows}</div>
+        </section>`;
+      }
+
+      function wisdomCard(date) {
+        const wisdom = dailyWisdomFor(date);
+        const options = [["rotate", "번갈아 보기"], ["quote", "명언"], ["scripture", "말씀"]]
+          .map(([mode, label]) => `<button type="button" class="wisdom-mode ${data.wisdomMode === mode ? "active" : ""}" data-action="select-wisdom-mode" data-mode="${mode}" aria-pressed="${data.wisdomMode === mode}">${label}</button>`)
+          .join("");
+        const source = wisdom.url
+          ? `<a class="wisdom-source" href="${escapeHtml(wisdom.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(wisdom.source)} · 출처 보기 ↗</a>`
+          : `<span class="wisdom-source">${escapeHtml(wisdom.source)} · 분기별 문구 순환</span>`;
+        return `<section class="card wisdom-card"><div class="wisdom-topline"><span class="wisdom-type">${wisdom.type}</span><div class="wisdom-modes" role="group" aria-label="오늘의 문장 종류">${options}</div></div><blockquote>${escapeHtml(wisdom.text)}</blockquote>${source}</section>`;
+      }
+
+      function quickMemoCard() {
+        const latest = [...data.memos].sort((a, b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 2);
+        return `<section class="card card-pad">
+          <div class="card-heading"><div><h2>빠른 메모</h2><p>떠오른 생각을 짧게 남겨두세요.</p></div><button class="text-link" type="button" data-page="memo">메모장 열기 ↗</button></div>
+          <form class="quick-form" data-form="add-memo">
+            <textarea name="memo" maxlength="1000" placeholder="지금 떠오른 내용을 적어보세요." aria-label="빠른 메모"></textarea>
+            <button class="add-btn" type="submit">메모 저장</button>
+          </form>
+          ${latest.length ? `<div class="memo-list" style="margin-top:12px">${latest.map(memo => `<div class="memo-row"><div class="memo-body"><time>${escapeHtml(new Date(memo.createdAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))}</time><p class="memo-preview">${escapeHtml(memo.text)}</p></div></div>`).join("")}</div>` : ""}
+        </section>`;
+      }
+
+      function renderToday() {
+        const day = dateKey(cursor);
+        const monday = mondayOf(cursor);
+        const name = data.profile.name.trim();
+        const displayName = name ? `${escapeHtml(name)}님,` : "멤버님,";
+        const plan = dailyPlanFor(day);
+        content.innerHTML = `
+          <div class="greeting">
+            <div><h1>${displayName} 오늘도 차분하게 시작해요.</h1><p>${dateLabel(cursor)} · 작은 체크가 하루를 가볍게 해줘요.</p></div>
+            <span class="period-tag">${escapeHtml(tenureText(data.profile.startDate))}</span>
+          </div>
+          <div class="dashboard-grid">
+            <div class="stack">
+              <section class="card card-pad">
+                <div class="card-heading"><div><h2>오늘의 방향</h2><p>오늘 가장 중요하게 둘 방향을 정해보세요.</p></div></div>
+                <div class="focus-box">
+                  <label class="focus-label" for="focusInput">✦ 오늘의 방향</label>
+                  <input id="focusInput" data-plan="promise" data-plan-date="${day}" maxlength="120" value="${escapeHtml(plan.promise)}" placeholder="예: 중요한 일부터 차분히 마무리하기">
+                  <div class="focus-keywords" aria-label="꼭 기억할 키워드 세 가지">
+                    ${plan.keywords.map((keyword, index) => `<label class="focus-keyword"><span>키워드 ${index + 1}</span><input data-plan="keyword" data-keyword-index="${index}" data-plan-date="${day}" maxlength="24" value="${escapeHtml(keyword)}" aria-label="기억할 키워드 ${index + 1}" placeholder="키워드"></label>`).join("")}
+                  </div>
+                </div>
+              </section>
+              ${scheduleCard("day", day)}
+              ${quickMemoCard()}
+            </div>
+            <div class="stack">
+              <section class="card profile-card">
+                <div class="card-heading"><div><h3>나의 리얼워크</h3><p>함께 일하는 나를 소개해요.</p></div><button class="text-link" type="button" data-page="profile">프로필 수정 ↗</button></div>
+                <div class="profile-info"><div><span>함께한 기간</span><strong>${escapeHtml(tenureText(data.profile.startDate))}</strong></div><div><span>로그인</span><strong>${escapeHtml(localStorage.getItem(SESSION_KEY) || "데모 멤버")}</strong></div></div>
+                <div class="profile-work"><span>요즘 하는 일</span><p>${data.profile.work.trim() ? escapeHtml(data.profile.work) : "프로필에서 담당 업무를 간단히 적어주세요."}</p></div>
+              </section>
+              ${dashboardAnniversaryCard()}
+              <div class="tip"><strong>부담 없이 기록해요</strong>일정은 추가하고 체크하는 것만으로 충분해요. 정해진 방식 없이 내 일하는 흐름에 맞춰 사용해보세요.</div>
+            </div>
+          </div>`;
+      }
+
+      function renderWeek() {
+        const monday = mondayOf(cursor);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        let selected = new Date(`${selectedDate}T00:00:00`);
+        if (selected < monday || selected > sunday) {
+          selectedDate = dateKey(cursor);
+          selected = new Date(`${selectedDate}T00:00:00`);
+        }
+        const weekdays = ["월", "화", "수", "목", "금", "토", "일"];
+        const pills = weekdays.map((label, index) => {
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + index);
+          const key = dateKey(date);
+          const tasks = tasksFor(key);
+          const isToday = key === dateKey(today);
+          const summary = tasks.length
+            ? `${tasks.slice(0, 2).map(task => `<small title="${escapeHtml(task.text)}">${task.done ? "✓ " : ""}${escapeHtml(task.text)}</small>`).join("")}${tasks.length > 2 ? `<small>+${tasks.length - 2}개</small>` : ""}`
+            : "<small>일정 없음</small>";
+          return `<button type="button" class="day-pill ${isToday ? "today" : ""} ${key === selectedDate ? "selected" : ""}" data-action="select-week-date" data-date="${key}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 일정 ${tasks.length}개">
+            <span>${label}</span><strong>${date.getDate()}</strong>${summary}
+          </button>`;
+        }).join("");
+        const weekTasks = Array.from({ length: 7 }, (_, index) => {
+          const date = new Date(monday);
+          date.setDate(monday.getDate() + index);
+          return tasksFor(dateKey(date));
+        }).flat();
+        content.innerHTML = `
+          <div class="schedule-view">
+            <div class="schedule-title"><div><h1>주간 일정</h1><p>날짜 칸을 눌러 일정을 확인하고, 아래에서 추가하세요.</p></div>
+              <div class="period-nav"><button class="icon-btn" type="button" data-action="shift" data-unit="week" data-step="-1" aria-label="지난주">‹</button><strong>${escapeHtml(weekLabel(cursor))}</strong><button class="icon-btn" type="button" data-action="shift" data-unit="week" data-step="1" aria-label="다음 주">›</button></div>
+            </div>
+            <div class="week-strip">${pills}</div>
+            <div class="schedule-layout">
+              <div class="schedule-side">
+                ${scheduleCard("day", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "선택한 날짜의 일정을 확인하고 아래에서 바로 추가하세요." })}
+              </div>
+              <div class="schedule-side">
+                <div class="card card-pad"><div class="card-heading"><div><h2>이번 주 진행</h2><p>하루별 일정을 모아 보여드려요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(weekTasks)}<small> / ${weekTasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(weekTasks)}%"></i></div></div></div>
+                <div class="tip"><strong>주간 일정 활용 팁</strong>각 날짜를 선택해 할 일을 적으면 오늘·월간 일정에도 함께 표시돼요.</div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function renderMonth() {
+        if (!selectedDate.startsWith(monthKey(cursor))) selectedDate = dateKey(cursor);
+        const monthName = new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long" }).format(cursor);
+        const monthStart = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+        const gridStart = mondayOf(monthStart);
+        const weekdays = ["월", "화", "수", "목", "금", "토", "일"];
+        const calendarCells = Array.from({ length: 42 }, (_, index) => {
+          const date = new Date(gridStart);
+          date.setDate(gridStart.getDate() + index);
+          const key = dateKey(date);
+          const tasks = tasksFor(key);
+          const outside = date.getMonth() !== cursor.getMonth();
+          const selected = key === selectedDate;
+          const isToday = key === dateKey(today);
+          const events = tasks.slice(0, 2).map(task => `<span class="calendar-event ${task.done ? "done" : ""} ${priorityClass(task.priority)}" title="${escapeHtml(task.text)}">${escapeHtml(task.text)}</span>`).join("");
+          const more = tasks.length > 2 ? `<span class="calendar-more">+${tasks.length - 2}개</span>` : "";
+          return `<button type="button" class="calendar-cell ${outside ? "outside" : ""} ${selected ? "selected" : ""} ${isToday ? "today" : ""}" data-action="select-date" data-date="${key}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 일정 ${tasks.length}개">
+            <span class="calendar-date">${date.getDate()}</span>${events}${more}
+          </button>`;
+        }).join("");
+        const tasks = monthTasksFor(cursor);
+        const selected = new Date(`${selectedDate}T00:00:00`);
+        content.innerHTML = `
+          <div class="schedule-view">
+            <div class="schedule-title"><div><h1>월간 일정</h1><p>이번 달에 꼭 챙길 일을 간단히 모아보세요.</p></div>
+              <div class="period-nav"><button class="icon-btn" type="button" data-action="shift" data-unit="month" data-step="-1" aria-label="지난달">‹</button><strong>${escapeHtml(monthName)}</strong><button class="icon-btn" type="button" data-action="shift" data-unit="month" data-step="1" aria-label="다음달">›</button></div>
+            </div>
+            <div class="calendar-layout">
+              <section class="card calendar-card">
+                <div class="calendar-panel"><div class="card-heading"><div><h2>${escapeHtml(monthName)} 캘린더</h2><p>날짜 칸을 눌러 일정을 확인하고, 아래에서 추가하세요.</p></div></div>
+                  <div class="calendar-grid">${weekdays.map(label => `<div class="calendar-weekday">${label}</div>`).join("")}${calendarCells}</div>
+                </div>
+              </section>
+              <div class="schedule-side">
+                <div class="calendar-selected">${scheduleCard("day", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "선택한 날짜의 일정을 확인하고 아래에서 바로 추가하세요." })}</div>
+                <div class="card card-pad"><div class="card-heading"><div><h2>이번 달 진행</h2><p>달력에 등록한 일정이에요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(tasks)}<small> / ${tasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(tasks)}%"></i></div></div></div>
+                <div class="tip"><strong>달력은 간단하게</strong>날짜를 선택하고 할 일을 적으면 끝이에요. 완료 체크는 오늘 일정과 달력에 함께 반영돼요.</div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      function renderProfile() {
+        content.innerHTML = `<section class="profile-page">
+          <h1>내 프로필</h1><p>간단한 정보를 적어두면 일하는 맥락을 한눈에 확인할 수 있어요.</p>
+          <form id="profileForm" class="card">
+            <div class="field"><label>프로필 사진</label><div class="photo-picker">
+              <img class="photo-preview ${data.profile.photo ? "" : "hidden"}" id="photoPreview" src="${data.profile.photo ? escapeHtml(data.profile.photo) : ""}" alt="프로필 사진 미리보기">
+              <span class="photo-preview ${data.profile.photo ? "hidden" : ""}" id="photoPlaceholder">${escapeHtml(data.profile.name.trim().slice(0, 1) || "멤")}</span>
+              <div class="photo-actions"><label class="secondary" for="photoInput" style="display:inline-flex;align-items:center;cursor:pointer">사진 선택</label><input id="photoInput" type="file" accept="image/*" class="hidden"><button class="secondary" type="button" data-action="clear-photo" ${data.profile.photo ? "" : "disabled"}>사진 삭제</button><p class="photo-help">사진은 이 브라우저에만 저장됩니다.</p></div>
+            </div></div>
+            <div class="field"><label for="profileName">이름 <span style="color:var(--muted);font-weight:400">· 선택</span></label><input id="profileName" name="name" maxlength="30" value="${escapeHtml(data.profile.name)}" placeholder="이름"></div>
+            <div class="field"><label for="startDate">리얼워크 입사일</label><input id="startDate" name="startDate" type="date" value="${escapeHtml(data.profile.startDate)}" max="${dateKey(today)}"></div>
+            <div class="field"><label for="profileWork">요즘 하는 일</label><textarea id="profileWork" name="work" maxlength="240" placeholder="예: 고객사 프로젝트 기획과 워크숍 운영을 맡고 있어요.">${escapeHtml(data.profile.work)}</textarea></div>
+            <button class="primary" type="submit">프로필 저장</button>
+          </form>
+        </section>`;
+      }
+
+      function renderMemos() {
+        const memos = [...data.memos].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+        const cards = memos.map(memo => {
+          const preview = Array.from(memo.text);
+          const text = preview.slice(0, 180).join("");
+          return `<article class="memo-card" data-search="${escapeHtml(memo.text.toLocaleLowerCase())}">
+            <div class="memo-card-head"><time>${escapeHtml(new Date(memo.createdAt).toLocaleString("ko-KR"))}</time><button type="button" class="delete-task" data-action="delete-memo" data-id="${escapeHtml(memo.id)}" aria-label="메모 삭제">×</button></div>
+            <p class="memo-preview">${escapeHtml(text)}${preview.length > 180 ? "…" : ""}</p>
+          </article>`;
+        }).join("");
+        content.innerHTML = `<section class="profile-page">
+          <h1>빠른 메모</h1><p>정리하지 않아도 괜찮아요. 먼저 적어두고 필요할 때 다시 찾아보세요.</p>
+          <section class="card card-pad" style="margin-bottom:16px">
+            <form class="quick-form" data-form="add-memo">
+              <textarea name="memo" maxlength="1000" placeholder="떠오른 생각, 잊고 싶지 않은 내용을 적어보세요." aria-label="새 메모"></textarea>
+              <button class="add-btn" type="submit">메모 저장</button>
+            </form>
+          </section>
+          <section class="card card-pad"><div class="card-heading"><div><h2>내 메모</h2><p id="memoResultCount">${memos.length}개</p></div></div>
+            <input id="memoSearch" class="memo-search" type="search" placeholder="메모 내용 검색" aria-label="메모 검색" autocomplete="off">
+            <div class="memo-grid">${cards || '<div class="empty memo-grid-empty">아직 메모가 없어요. 떠오른 생각을 적어보세요.</div>'}</div>
+            <div id="memoEmpty" class="empty hidden">검색 결과가 없어요.</div>
+          </section>
+        </section>`;
+      }
+
+      function renderAnniversaries() {
+        content.innerHTML = `<section class="profile-page">
+          <h1>멤버 경조사</h1><p>함께 일하는 멤버의 경조사를 따로 기록하고 챙겨보세요.</p>
+          ${anniversaryManager()}
+        </section>`;
+      }
+
+      function render() {
+        $("#topDate").textContent = dateLabel(today);
+        $("#topWisdom").innerHTML = wisdomCard(today);
+        const isLight = document.documentElement.dataset.theme === "light";
+        $("#themeToggle").textContent = isLight ? "☾" : "☼";
+        $("#themeToggle").setAttribute("aria-label", isLight ? "어두운 배경으로 전환" : "밝은 배경으로 전환");
+        $("#themeToggle").title = isLight ? "어두운 배경으로 전환" : "밝은 배경으로 전환";
+        document.querySelector('meta[name="theme-color"]').content = isLight ? "#f2f5f4" : "#0a0c0c";
+        $$(".nav button").forEach(button => button.classList.toggle("active", button.dataset.page === page));
+        if (page === "today") renderToday();
+        else if (page === "week") renderWeek();
+        else if (page === "month") renderMonth();
+        else if (page === "anniversaries") renderAnniversaries();
+        else if (page === "memo") renderMemos();
+        else renderProfile();
+        updateSidebar();
+      }
+
+      function showApp() {
+        $("#loginScreen").classList.add("hidden");
+        $("#app").classList.remove("hidden");
+        render();
+        showWelcomeSplash();
+      }
+
+      function showWelcomeSplash() {
+        const splash = $("#welcomeSplash");
+        splash.showModal();
+        const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1800 : 4200;
+        splash.dataset.timer = String(window.setTimeout(() => {
+          if (splash.open) splash.close();
+        }, delay));
+      }
+
+      function enterAppFromWelcome() {
+        $("#loginScreen").classList.add("hidden");
+        $("#app").classList.remove("hidden");
+        page = "today";
+        cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        selectedDate = dateKey(cursor);
+        render();
+        const splash = $("#welcomeSplash");
+        if (splash.open) splash.close();
+      }
+
+      $$("#welcomeSplash [data-action=\"close-welcome\"]").forEach(button => {
+        button.addEventListener("click", enterAppFromWelcome);
+      });
+
+      $("#loginForm").addEventListener("submit", event => {
+        event.preventDefault();
+        const email = $("#loginEmail").value.trim();
+        const password = $("#loginPassword").value;
+        if (!email || !password) {
+          $("#loginError").textContent = "이메일과 비밀번호를 입력해주세요.";
+          return;
+        }
+        try {
+          localStorage.setItem(SESSION_KEY, email);
+        } catch (error) {
+          console.error("데모 세션을 저장하지 못했습니다.", error);
+          $("#loginError").textContent = "브라우저 저장 공간을 사용할 수 없어요.";
+          return;
+        }
+        $("#loginPassword").value = "";
+        $("#loginError").textContent = "";
+        showApp();
+      });
+
+      document.addEventListener("click", event => {
+        const pageButton = event.target.closest("[data-page]");
+        if (pageButton) {
+          page = pageButton.dataset.page;
+          if (page === "today") {
+            cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            selectedDate = dateKey(cursor);
+          }
+          render();
+          return;
+        }
+        const action = event.target.closest("[data-action]");
+        if (!action) return;
+        if (action.dataset.action === "close-welcome") {
+          enterAppFromWelcome();
+          return;
+        }
+        if (action.dataset.action === "shift") {
+          const step = Number(action.dataset.step);
+          if (action.dataset.unit === "week") cursor.setDate(cursor.getDate() + step * 7);
+          else {
+            cursor = new Date(cursor.getFullYear(), cursor.getMonth() + step, 1);
+            selectedDate = dateKey(cursor);
+          }
+          render();
+        }
+        if (action.dataset.action === "select-date") {
+          selectedDate = action.dataset.date;
+          cursor = new Date(`${selectedDate}T00:00:00`);
+          render();
+        }
+        if (action.dataset.action === "select-week-date") {
+          selectedDate = action.dataset.date;
+          cursor = new Date(`${selectedDate}T00:00:00`);
+          render();
+        }
+        if (action.dataset.action === "select-wisdom-mode") {
+          data.wisdomMode = action.dataset.mode;
+          persist();
+          $("#topWisdom").innerHTML = wisdomCard(today);
+        }
+        if (action.dataset.action === "delete-task") {
+          const list = data.schedules[action.dataset.key] || [];
+          data.schedules[action.dataset.key] = list.filter(task => task.id !== action.dataset.id);
+          persist();
+          render();
+          showToast("일정을 삭제했어요.");
+        }
+        if (action.dataset.action === "delete-anniversary") {
+          data.anniversaries = data.anniversaries.filter(item => item.id !== action.dataset.id);
+          persist();
+          render();
+          showToast("경조사를 삭제했어요.");
+        }
+        if (action.dataset.action === "delete-memo") {
+          data.memos = data.memos.filter(item => item.id !== action.dataset.id);
+          persist();
+          render();
+          showToast("메모를 삭제했어요.");
+        }
+        if (action.dataset.action === "clear-photo") {
+          data.profile.photo = "";
+          persist();
+          render();
+          showToast("프로필 사진을 삭제했어요.");
+        }
+      });
+
+      document.addEventListener("keydown", event => {
+        const splash = $("#welcomeSplash");
+        if (event.key === "Escape" && splash.open) {
+          event.preventDefault();
+          splash.close();
+        }
+      });
+
+      $("#welcomeSplash").addEventListener("click", event => {
+        if (event.target.closest('[data-action="close-welcome"]') || event.target === event.currentTarget) {
+          enterAppFromWelcome();
+        }
+      });
+      $("#welcomeSplash").addEventListener("close", event => {
+        window.clearTimeout(Number(event.currentTarget.dataset.timer));
+      });
+
+      document.addEventListener("change", event => {
+        const checkbox = event.target.closest('[data-action="toggle-task"]');
+        if (checkbox) {
+          const list = data.schedules[checkbox.dataset.key] || [];
+          const task = list.find(item => item.id === checkbox.dataset.id);
+          if (task) task.done = checkbox.checked;
+          persist();
+          render();
+          return;
+        }
+        const priority = event.target.closest('[data-action="edit-task-priority"]');
+        if (priority) {
+          const task = (data.schedules[priority.dataset.key] || []).find(item => item.id === priority.dataset.id);
+          if (task) task.priority = priority.value;
+          persist();
+          render();
+          return;
+        }
+        const taskText = event.target.closest('[data-action="edit-task-text"]');
+        if (taskText && !taskText.value.trim()) render();
+      });
+
+      document.addEventListener("submit", event => {
+        const form = event.target;
+        if (form.matches('[data-form="add-task"]')) {
+          event.preventDefault();
+          const text = form.elements.task.value.trim();
+          if (!text) return;
+          const kind = form.dataset.kind || "day";
+          const key = form.dataset.key || scheduleKey(kind);
+          const priority = form.elements.priority.value;
+          scheduleFor(key).push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, priority, done: false });
+          persist();
+          render();
+          showToast("일정을 추가했어요.");
+        }
+        if (form.id === "profileForm") {
+          event.preventDefault();
+          const formData = new FormData(form);
+          data.profile = { ...data.profile, name: String(formData.get("name") || "").trim(), startDate: String(formData.get("startDate") || ""), work: String(formData.get("work") || "").trim() };
+          persist();
+          render();
+          showToast("프로필을 저장했어요.");
+        }
+        if (form.matches('[data-form="add-anniversary"]')) {
+          event.preventDefault();
+          const formData = new FormData(form);
+          const name = String(formData.get("name") || "").trim();
+          const type = eventType(formData.get("type"));
+          const fullDate = String(formData.get("date") || "");
+          const date = type === "생일" ? fullDate.slice(-5) : fullDate;
+          if (!name || !date) return;
+          data.anniversaries.push({ id: anniversaryId(), name, date, type, recurring: type === "생일" });
+          persist();
+          render();
+          showToast("멤버 경조사를 추가했어요.");
+        }
+        if (form.matches('[data-form="add-memo"]')) {
+          event.preventDefault();
+          const text = String(new FormData(form).get("memo") || "").trim();
+          if (!text) return;
+          data.memos.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, createdAt: new Date().toISOString() });
+          persist();
+          render();
+          showToast("메모를 저장했어요.");
+        }
+      });
+
+      document.addEventListener("input", event => {
+        if (event.target.id === "memoSearch") {
+          const query = event.target.value.trim().toLocaleLowerCase();
+          let visibleCount = 0;
+          $$(".memo-card", content).forEach(card => {
+            const matches = card.dataset.search.includes(query);
+            card.classList.toggle("hidden", !matches);
+            if (matches) visibleCount += 1;
+          });
+          const emptyNotes = $(".memo-grid-empty", content);
+          if (emptyNotes) emptyNotes.classList.toggle("hidden", Boolean(query));
+          $("#memoResultCount").textContent = query ? `${visibleCount}개 검색됨` : `${data.memos.length}개`;
+          $("#memoEmpty").classList.toggle("hidden", !query || visibleCount > 0);
+          return;
+        }
+        if (event.target.matches('[data-plan="promise"], [data-plan="keyword"]')) {
+          const plan = dailyPlanFor(event.target.dataset.planDate);
+          if (event.target.dataset.plan === "promise") plan.promise = event.target.value;
+          else plan.keywords[Number(event.target.dataset.keywordIndex)] = event.target.value;
+          persist();
+          return;
+        }
+        if (event.target.matches('[data-action="edit-task-text"]')) {
+          const task = (data.schedules[event.target.dataset.key] || []).find(item => item.id === event.target.dataset.id);
+          if (task && event.target.value.trim()) {
+            task.text = event.target.value;
+            persist();
+          }
+          return;
+        }
+      });
+
+      document.addEventListener("change", async event => {
+        if (event.target.id === "anniversaryFile") {
+          const [file] = event.target.files || [];
+          if (file) await importAnniversaries(file);
+          return;
+        }
+        if (event.target.id !== "photoInput") return;
+        const [file] = event.target.files || [];
+        if (!file) return;
+        try {
+          data.profile.photo = await photoDataUrl(file);
+          persist();
+          render();
+          showToast("프로필 사진을 저장했어요.");
+        } catch (error) {
+          console.error("프로필 사진을 처리하지 못했습니다.", error);
+          showToast(error.message || "사진을 불러오지 못했어요.");
+        }
+      });
+
+      $("#profileShortcut").addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") { event.preventDefault(); page = "profile"; render(); }
+      });
+      $("#profileShortcut").addEventListener("click", () => { page = "profile"; render(); });
+      $("#topProfile").addEventListener("click", () => { page = "profile"; render(); });
+      $("#themeToggle").addEventListener("click", () => {
+        const nextTheme = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = nextTheme;
+        localStorage.setItem("realwork-member-theme", nextTheme);
+        $("#themeToggle").textContent = nextTheme === "light" ? "☾" : "☼";
+        $("#themeToggle").setAttribute("aria-label", nextTheme === "light" ? "어두운 배경으로 전환" : "밝은 배경으로 전환");
+        $("#themeToggle").title = nextTheme === "light" ? "어두운 배경으로 전환" : "밝은 배경으로 전환";
+        document.querySelector('meta[name="theme-color"]').content = nextTheme === "light" ? "#f2f5f4" : "#0a0c0c";
+      });
+      $("#logoutButton").addEventListener("click", () => {
+        localStorage.removeItem(SESSION_KEY);
+        page = "today";
+        $("#loginForm").reset();
+        $("#loginScreen").classList.remove("hidden");
+        $("#app").classList.add("hidden");
+      });
+
+      if (localStorage.getItem(SESSION_KEY)) showApp();
+    })();
+  </script>
+</body>
+</html>
