@@ -191,6 +191,8 @@
     .nav button:hover { background: var(--hover); color: var(--ink); }
     .nav button.active { background: var(--accent-soft); color: var(--accent-dark); font-weight: 750; }
     .nav-icon { display: grid; width: 20px; place-items: center; font-size: 17px; }
+    .brand-home { width: 100%; border: 0; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+    .brand-home:hover { opacity: .84; }
     .sidebar-bottom { margin-top: auto; }
     .profile-mini {
       display: flex;
@@ -213,6 +215,7 @@
     .top-actions { display: flex; align-items: center; gap: 10px; }
     .saved-label { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
     .saved-dot { width: 7px; height: 7px; border-radius: 50%; background: #42b98d; }
+    .saved-label.save-error { color: var(--danger); }
     .icon-btn { width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 9px; background: var(--card); }
     .icon-btn:hover { background: var(--hover); }
     .content { max-width: 1100px; margin: 0 auto; }
@@ -348,7 +351,7 @@
       .app-shell { display: block; padding-bottom: 63px; }
       .sidebar { position: fixed; z-index: 5; top: auto; right: 0; bottom: 0; left: 0; display: block; width: 100%; height: 62px; padding: 5px 8px max(5px, env(safe-area-inset-bottom)); border-top: 1px solid var(--line); border-right: 0; }
       .sidebar .brand, .sidebar-bottom { display: none; }
-      .nav { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+      .nav { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 4px; }
       .nav button { display: grid; width: 100%; height: 50px; justify-items: center; align-content: center; gap: 0; border-radius: 8px; }
       .nav button > span:last-child { display: block; font-size: 9px; }
       .nav-icon { height: 23px; font-size: 16px; }
@@ -492,6 +495,31 @@
     .welcome-start:hover { background: #fff36a; transform: translateY(-1px); }
     .welcome-skip { min-height: 44px; padding: 0 15px; border: 1px solid rgba(255,255,255,.28); border-radius: 999px; background: transparent; color: #e4efea; cursor: pointer; }
     .welcome-skip:hover { background: rgba(255,255,255,.1); }
+    .tutorial-dialog {
+      width: min(460px, calc(100% - 32px));
+      max-width: none;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--card);
+      color: var(--ink);
+      box-shadow: 0 24px 80px rgba(0,0,0,.4);
+    }
+    .tutorial-dialog::backdrop { background: rgba(0,0,0,.66); }
+    .tutorial-content { padding: 26px; }
+    .tutorial-eyebrow { color: var(--accent-dark); font-size: 11px; font-weight: 800; letter-spacing: .8px; }
+    .tutorial-content h2 { margin: 8px 0; font-size: 22px; letter-spacing: -.5px; }
+    .tutorial-content p { margin: 0; color: var(--muted); line-height: 1.8; }
+    .tutorial-tip { margin-top: 15px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); color: var(--ink); font-size: 12px; line-height: 1.7; }
+    .tutorial-actions { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 22px; }
+    .tutorial-actions-group { display: flex; gap: 8px; }
+    .tutorial-button { min-height: 38px; padding: 0 13px; border: 1px solid var(--line); border-radius: 9px; background: var(--card-muted); cursor: pointer; }
+    .tutorial-button:hover { background: var(--hover); }
+    .tutorial-button.primary { width: auto; min-height: 38px; margin: 0; padding: 0 16px; border: 0; background: var(--accent); color: var(--on-accent); }
+    .tutorial-progress { height: 4px; margin-top: 18px; overflow: hidden; border-radius: 4px; background: var(--line); }
+    .tutorial-progress span { display: block; height: 100%; background: var(--accent); transition: width .2s; }
+    .tutorial-highlight { position: relative; z-index: 1; outline: 3px solid #f4e843 !important; outline-offset: 4px; box-shadow: 0 0 0 8px rgba(244,232,67,.2) !important; }
+    .tutorial-help { font-size: 15px; font-weight: 800; }
     @keyframes splash-backdrop { from { opacity: 0; } to { opacity: 1; } }
     @keyframes splash-photo { 0% { opacity: 0; transform: translateY(28px) rotate(5deg) scale(.72); } 75% { opacity: 1; transform: translateY(-5px) rotate(-2deg) scale(1.02); } 100% { opacity: 1; transform: translateY(0) rotate(-1deg) scale(1); } }
     @keyframes splash-sticker { to { transform: rotate(9deg) scale(1); } }
@@ -518,7 +546,7 @@
       .calendar-selected { position: static; }
     }
     @media (max-width: 650px) {
-      .nav { grid-template-columns: repeat(6, 1fr); }
+      .nav { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
       .calendar-panel { padding: 10px; }
       .calendar-cell { min-height: 88px; padding: 4px; }
       .calendar-date { margin-bottom: 2px; font-size: 10px; }
@@ -564,15 +592,15 @@
           <input id="loginPassword" type="password" placeholder="비밀번호 입력" autocomplete="current-password" required>
         </div>
         <p id="loginError" class="form-error" aria-live="polite"></p>
-        <button class="primary" type="submit">프로토타입 시작하기 <span aria-hidden="true">→</span></button>
-        <p class="demo-hint">프로토타입 데모입니다. 실제 인증은 진행되지 않으며,<br>입력한 비밀번호는 저장되지 않습니다.</p>
+        <button class="primary" type="submit" id="loginButton">로그인하기 <span aria-hidden="true">→</span></button>
+        <p class="demo-hint">초대받은 리얼워크 멤버만 로그인할 수 있어요.<br>일정과 메모는 본인에게만 보이고, 경조사는 멤버와 공유돼요.</p>
       </form>
     </div>
   </section>
 
   <div id="app" class="app-shell hidden">
     <aside class="sidebar">
-      <div class="brand"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>일잘러노트</span></div>
+      <button type="button" class="brand brand-home" data-page="today" aria-label="오늘 대시보드로 이동"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>일잘러노트</span></button>
       <p class="nav-label">WORKSPACE</p>
       <nav class="nav" aria-label="메인 메뉴">
         <button type="button" class="active" data-page="today" aria-label="오늘"><span class="nav-icon">◷</span><span>오늘</span></button>
@@ -581,6 +609,7 @@
         <button type="button" data-page="anniversaries" aria-label="멤버 경조사"><span class="nav-icon">♡</span><span>경조사</span></button>
         <button type="button" data-page="memo" aria-label="빠른 메모"><span class="nav-icon">✎</span><span>빠른 메모</span></button>
         <button type="button" data-page="profile" aria-label="내 프로필"><span class="nav-icon">♙</span><span>내 프로필</span></button>
+        <button type="button" class="hidden" id="inviteNavButton" data-page="invite" aria-label="멤버 초대"><span class="nav-icon">✉</span><span>멤버 초대</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="profile-mini" id="profileShortcut" role="button" tabindex="0" aria-label="내 프로필 보기">
@@ -588,13 +617,13 @@
           <img class="avatar hidden" id="avatarPhoto" alt="">
           <div><strong id="miniName">리얼워크 멤버</strong><small id="miniTenure">프로필을 채워주세요</small></div>
         </div>
-        <button class="logout" type="button" id="logoutButton">↪ &nbsp;데모 로그아웃</button>
+        <button class="logout" type="button" id="logoutButton">↪ &nbsp;로그아웃</button>
       </div>
     </aside>
     <main>
       <header class="topbar">
         <div><div class="crumb">리얼워크 멤버 공유버전</div><div class="today-label" id="topDate"></div></div>
-        <div class="top-actions"><span class="saved-label"><i class="saved-dot"></i> 이 기기에 저장</span><button class="icon-btn theme-toggle" type="button" id="themeToggle" aria-label="밝은 배경으로 전환" title="밝은 배경으로 전환">☼</button><button class="icon-btn" type="button" id="topProfile" aria-label="프로필">♙</button></div>
+        <div class="top-actions"><span class="saved-label" id="saveStatus" aria-live="polite"><i class="saved-dot"></i><span id="saveStatusText">동기화 준비 중</span></span><button class="icon-btn tutorial-help" type="button" id="helpButton" aria-label="사용 방법 보기" title="사용 방법 보기">?</button><button class="icon-btn theme-toggle" type="button" id="themeToggle" aria-label="밝은 배경으로 전환" title="밝은 배경으로 전환">☼</button><button class="icon-btn" type="button" id="topProfile" aria-label="프로필">♙</button></div>
       </header>
       <div id="topWisdom" class="top-wisdom"></div>
       <div class="content" id="content"></div>
@@ -617,12 +646,31 @@
       </div>
     </div>
   </dialog>
+  <dialog id="tutorialDialog" class="tutorial-dialog" aria-labelledby="tutorialTitle" aria-describedby="tutorialDescription">
+    <div class="tutorial-content">
+      <div class="tutorial-eyebrow" id="tutorialStep"></div>
+      <h2 id="tutorialTitle"></h2>
+      <p id="tutorialDescription"></p>
+      <div class="tutorial-tip" id="tutorialTip"></div>
+      <div class="tutorial-progress" aria-hidden="true"><span id="tutorialProgress"></span></div>
+      <div class="tutorial-actions">
+        <button class="tutorial-button" type="button" data-action="skip-tutorial">건너뛰기</button>
+        <div class="tutorial-actions-group">
+          <button class="tutorial-button" type="button" id="tutorialPrevious">이전</button>
+          <button class="tutorial-button primary" type="button" id="tutorialNext">다음</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     (() => {
       const DATA_KEY = "realwork-member-note-v1";
-      const SESSION_KEY = "realwork-member-demo-session";
+      const SUPABASE_URL = "https://ztwctxsddydkdblgubbj.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_U6cXGsg-ZqP7Nl9NvzHTpQ_ffGRdWSa";
+      const supabaseClient = window.supabase?.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
       const $ = (selector, root = document) => root.querySelector(selector);
       const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
       const content = $("#content");
@@ -631,12 +679,27 @@
       let cursor = new Date(today.getFullYear(), today.getMonth(), today.getDate());
       let selectedDate = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
       let toastTimer;
+      let currentUser = null;
+      let isAppAdmin = false;
+      let dataReady = false;
+      let cloudSaveTimer = null;
+      let cloudSaveInProgress = false;
+      let cloudSaveQueued = false;
       const savedTheme = localStorage.getItem("realwork-member-theme");
       if (savedTheme === "light") document.documentElement.dataset.theme = "light";
 
-      const readData = () => {
+      const emptyData = () => ({
+        profile: { name: "", startDate: "", work: "", photo: "" },
+        dailyPlans: {},
+        schedules: {},
+        anniversaries: [],
+        memos: [],
+        wisdomMode: "rotate",
+        tutorialSeen: false
+      });
+      const readData = raw => {
         try {
-          const parsed = JSON.parse(localStorage.getItem(DATA_KEY) || "{}");
+          const parsed = JSON.parse(raw || "{}");
           const dailyPlans = { ...(parsed.dailyPlans || {}) };
           Object.entries(parsed.focus || {}).forEach(([key, value]) => {
             if (!dailyPlans[key]) dailyPlans[key] = { promise: typeof value === "string" ? value : "", keywords: [] };
@@ -654,22 +717,68 @@
             schedules: parsed.schedules || {},
             anniversaries: Array.isArray(parsed.anniversaries) ? parsed.anniversaries.filter(item => !/입사|근속/.test(item.type || "")) : [],
             memos: Array.isArray(parsed.memos) ? parsed.memos : [],
-            wisdomMode: ["rotate", "quote", "scripture"].includes(parsed.wisdomMode) ? parsed.wisdomMode : "rotate"
+            wisdomMode: ["rotate", "quote", "scripture"].includes(parsed.wisdomMode) ? parsed.wisdomMode : "rotate",
+            tutorialSeen: Boolean(parsed.tutorialSeen)
           };
         } catch (error) {
-          console.error("저장된 프로토타입 데이터를 읽지 못했습니다.", error);
-          return { profile: { name: "", startDate: "", work: "", photo: "" }, dailyPlans: {}, schedules: {}, anniversaries: [], memos: [], wisdomMode: "rotate" };
+          console.error("저장된 멤버 데이터를 읽지 못했습니다.", error);
+          return emptyData();
         }
       };
-      let data = readData();
+      let data = emptyData();
+      const localDataKey = userId => `${DATA_KEY}:${userId}`;
+      const privateData = () => {
+        const { anniversaries, ...personalData } = data;
+        return personalData;
+      };
+      const setSaveStatus = (text, failed = false) => {
+        const status = $("#saveStatus");
+        $("#saveStatusText").textContent = text;
+        status.classList.toggle("save-error", failed);
+      };
+      async function saveCloudData() {
+        if (!supabaseClient || !currentUser || !dataReady) return;
+        if (cloudSaveInProgress) {
+          cloudSaveQueued = true;
+          return;
+        }
+        cloudSaveInProgress = true;
+        setSaveStatus("서버에 저장 중");
+        try {
+          const { error } = await supabaseClient.from("member_data").upsert({
+            user_id: currentUser.id,
+            data: privateData(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: "user_id" });
+          if (error) throw error;
+          setSaveStatus("모든 기기에 저장됨");
+        } catch (error) {
+          console.error("멤버 데이터를 Supabase에 저장하지 못했습니다.", error);
+          setSaveStatus("서버 저장 실패", true);
+          showToast("서버 저장에 실패했어요. 연결 상태를 확인해주세요.");
+        } finally {
+          cloudSaveInProgress = false;
+          if (cloudSaveQueued) {
+            cloudSaveQueued = false;
+            void saveCloudData();
+          }
+        }
+      }
+      const scheduleCloudSave = () => {
+        if (!currentUser || !dataReady) return;
+        clearTimeout(cloudSaveTimer);
+        setSaveStatus("저장 대기 중");
+        cloudSaveTimer = setTimeout(() => void saveCloudData(), 700);
+      };
       const persist = () => {
         try {
-          localStorage.setItem(DATA_KEY, JSON.stringify(data));
-          updateSidebar();
+          if (currentUser) localStorage.setItem(localDataKey(currentUser.id), JSON.stringify(privateData()));
         } catch (error) {
-          console.error("프로토타입 데이터를 저장하지 못했습니다.", error);
-          showToast("저장에 실패했어요. 브라우저 저장 공간을 확인해주세요.");
+          console.error("멤버 데이터를 이 기기에 저장하지 못했습니다.", error);
+          showToast("이 기기 저장에 실패했어요. 저장 공간을 확인해주세요.");
         }
+        updateSidebar();
+        scheduleCloudSave();
       };
       const pad = number => String(number).padStart(2, "0");
       const dateKey = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
@@ -857,11 +966,14 @@
         if (/결혼|혼인|웨딩/i.test(text)) return "결혼";
         if (/출산|출생|돌잔치|백일/i.test(text)) return "출산";
         if (/부고|조사|조의|별세|조문|장례/i.test(text)) return "조사";
-        return text ? "기타" : "기념일";
+        return "기타";
       };
-      const anniversaryId = () => crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
       async function importAnniversaries(file) {
         const status = $("#anniversaryImportStatus");
+        if (!isAppAdmin) {
+          status.textContent = "경조사 가져오기는 지정된 관리자만 할 수 있어요.";
+          return;
+        }
         status.textContent = "엑셀 파일을 읽고 있어요.";
         try {
           const xlsx = await loadXlsx();
@@ -912,7 +1024,7 @@
                 skippedRows.push(rowIndex + 1);
                 continue;
               }
-              const fallbackType = birthdayDateColumn === dateIndex ? "생일" : "기념일";
+              const fallbackType = birthdayDateColumn === dateIndex ? "생일" : "기타";
               if (!addItem(rawDate, typeIndex >= 0 ? row[typeIndex] || fallbackType : fallbackType)) skippedRows.push(rowIndex + 1);
             } else {
               let foundDate = false;
@@ -925,17 +1037,23 @@
             }
           }
           let duplicates = 0;
-          let added = 0;
-          for (const item of imported) {
+          const toAdd = imported.filter(item => {
             const exists = data.anniversaries.some(saved => saved.name === item.name && saved.date === item.date && saved.type === item.type);
-            if (exists) {
-              duplicates += 1;
-              continue;
-            }
-            data.anniversaries.push({ id: anniversaryId(), ...item });
-            added += 1;
+            if (exists) duplicates += 1;
+            return !exists;
+          });
+          if (toAdd.length) {
+            const rowsToInsert = toAdd.map(item => ({
+              name: item.name,
+              event_type: item.type,
+              event_date: item.recurring ? `2000-${item.date.slice(-5)}` : item.date,
+              recurring: item.recurring
+            }));
+            const { data: insertedRows, error } = await supabaseClient.from("shared_anniversaries").insert(rowsToInsert).select("id,name,event_type,event_date,recurring");
+            if (error) throw error;
+            data.anniversaries.push(...insertedRows.map(anniversaryFromRow));
           }
-          persist();
+          const added = toAdd.length;
           render();
           const skippedMessage = skippedRows.length ? ` · 건너뜀 ${skippedRows.length}행${skippedRows.length <= 8 ? ` (${skippedRows.join(", ")}행)` : ""}` : "";
           showToast(`경조사 ${added}건 추가${duplicates ? ` · 중복 ${duplicates}건` : ""}${skippedMessage}`);
@@ -1054,12 +1172,12 @@
           return `<div class="anniversary-row">
             <span class="anniversary-date">${pad(date.getMonth() + 1)}.${pad(date.getDate())}</span>
             <div class="anniversary-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.type || "기념일")} · ${status}${isBirthday ? " · 매년" : ""}</small></div>
-            <button type="button" class="delete-task" data-action="delete-anniversary" data-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)} 기념일 삭제">×</button>
+            ${isAppAdmin ? `<button type="button" class="delete-task" data-action="delete-anniversary" data-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)} 기념일 삭제">×</button>` : ""}
           </div>`;
-        }).join("") : '<div class="empty">아직 등록한 경조사가 없어요. 직접 추가하거나 Excel 파일을 가져와보세요.</div>';
+        }).join("") : `<div class="empty">${isAppAdmin ? "아직 등록한 경조사가 없어요. 직접 추가하거나 Excel 파일을 가져와보세요." : "아직 공유된 경조사가 없어요."}</div>`;
         return `<section class="card card-pad">
           <div class="card-heading"><div><h2>멤버 경조사</h2><p>생일은 매년, 다른 경조사는 해당 날짜에 한 번 표시해요.</p></div><span class="period-tag">${data.anniversaries.length}건</span></div>
-          <form class="anniversary-form" data-form="add-anniversary">
+          ${isAppAdmin ? `<form class="anniversary-form" data-form="add-anniversary">
             <input name="name" maxlength="30" placeholder="멤버 이름" aria-label="멤버 이름" required>
             <input name="date" type="date" aria-label="경조사 날짜" required>
             <select name="type" aria-label="경조사 종류"><option>생일</option><option>결혼</option><option>출산</option><option>조사</option><option>기타</option></select>
@@ -1067,7 +1185,7 @@
           </form>
           <label class="secondary excel-upload" for="anniversaryFile">엑셀 파일 가져오기</label>
           <input id="anniversaryFile" type="file" accept=".xlsx,.xls,.csv" class="hidden">
-          <p class="photo-help excel-help">권장 열: 멤버명, 날짜, 종류(생일·결혼·출산·조사). 또는 멤버명과 생일/결혼/출산/조사 날짜 열. 생일은 월/일, 다른 경조사는 연도 포함 날짜가 필요해요.</p>
+          <p class="photo-help excel-help">권장 열: 멤버명, 날짜, 종류(생일·결혼·출산·조사). 또는 멤버명과 생일/결혼/출산/조사 날짜 열. 생일은 월/일, 다른 경조사는 연도 포함 날짜가 필요해요.</p>` : `<p class="photo-help">리얼워크 멤버가 함께 보는 목록이에요. 추가와 수정은 지정된 관리자에게 요청해주세요.</p>`}
           <p id="anniversaryImportStatus" class="photo-help" aria-live="polite"></p>
           <div class="anniversary-list">${rows}</div>
         </section>`;
@@ -1125,7 +1243,7 @@
             <div class="stack">
               <section class="card profile-card">
                 <div class="card-heading"><div><h3>나의 리얼워크</h3><p>함께 일하는 나를 소개해요.</p></div><button class="text-link" type="button" data-page="profile">프로필 수정 ↗</button></div>
-                <div class="profile-info"><div><span>함께한 기간</span><strong>${escapeHtml(tenureText(data.profile.startDate))}</strong></div><div><span>로그인</span><strong>${escapeHtml(localStorage.getItem(SESSION_KEY) || "데모 멤버")}</strong></div></div>
+                <div class="profile-info"><div><span>함께한 기간</span><strong>${escapeHtml(tenureText(data.profile.startDate))}</strong></div><div><span>로그인</span><strong>${escapeHtml(currentUser?.email || "")}</strong></div></div>
                 <div class="profile-work"><span>요즘 하는 일</span><p>${data.profile.work.trim() ? escapeHtml(data.profile.work) : "프로필에서 담당 업무를 간단히 적어주세요."}</p></div>
               </section>
               ${dashboardAnniversaryCard()}
@@ -1272,6 +1390,21 @@
         </section>`;
       }
 
+      function renderInvites() {
+        content.innerHTML = `<section class="profile-page">
+          <h1>멤버 초대</h1>
+          <p>리얼워크 이메일로 초대 메일을 보내 새 멤버가 비밀번호를 설정하고 로그인할 수 있게 해요.</p>
+          <section class="card card-pad">
+            ${isAppAdmin ? `<form data-form="invite-member">
+              <div class="field"><label for="inviteEmail">초대할 멤버 이메일</label><input id="inviteEmail" name="email" type="email" maxlength="254" placeholder="name@realwork.group" autocomplete="email" required></div>
+              <p id="inviteStatus" class="photo-help" aria-live="polite"></p>
+              <button class="primary" type="submit">초대 메일 보내기</button>
+            </form>` : `<p role="status">멤버 초대는 지정된 관리자만 할 수 있어요.</p>`}
+          </section>
+          <div class="tip"><strong>초대 권한 안내</strong>초대된 계정은 일반 멤버로 추가돼요. 관리자 권한은 자동으로 부여되지 않으며, 관리자 추가는 Supabase에서 별도로 진행해야 해요.</div>
+        </section>`;
+      }
+
       function render() {
         $("#topDate").textContent = dateLabel(today);
         $("#topWisdom").innerHTML = wisdomCard(today);
@@ -1281,14 +1414,137 @@
         $("#themeToggle").title = isLight ? "어두운 배경으로 전환" : "밝은 배경으로 전환";
         document.querySelector('meta[name="theme-color"]').content = isLight ? "#f2f5f4" : "#0a0c0c";
         $$(".nav button").forEach(button => button.classList.toggle("active", button.dataset.page === page));
+        $("#inviteNavButton").classList.toggle("hidden", !isAppAdmin);
         if (page === "today") renderToday();
         else if (page === "week") renderWeek();
         else if (page === "month") renderMonth();
         else if (page === "anniversaries") renderAnniversaries();
         else if (page === "memo") renderMemos();
+        else if (page === "invite") renderInvites();
         else renderProfile();
         updateSidebar();
       }
+
+      const tutorialSteps = [
+        {
+          page: "today",
+          target: '#content [data-form="add-task"]',
+          title: "오늘 할 일부터 적어보세요",
+          description: "처음에는 오늘 메뉴에서 해야 할 일을 한두 개만 적어보세요. 시간 입력 없이 제목만으로 추가하고, 완료하면 체크할 수 있어요.",
+          tip: "S는 가장 먼저 할 일, A는 중요, B는 보통, C는 여유 있을 때 할 일을 뜻해요."
+        },
+        {
+          page: "today",
+          target: "#content #focusInput",
+          title: "오늘의 방향을 정해요",
+          description: "오늘 가장 중요하게 둘 방향 한 가지와 잊지 않을 키워드 세 가지를 기록해요. 부담되면 비워두어도 괜찮아요.",
+          tip: "매일 바뀌는 기록이라 오늘 할 일의 우선순위를 잡는 데 도움을 줘요."
+        },
+        {
+          page: "profile",
+          target: "#content #profileForm",
+          title: "프로필은 편할 때 채우세요",
+          description: "이름, 리얼워크 입사일, 요즘 하는 일을 적을 수 있어요. 모두 필수는 아니며, 사진도 선택해서 등록할 수 있어요.",
+          tip: "일정이나 메모를 쓰기 위해 프로필을 먼저 완성할 필요는 없어요."
+        },
+        {
+          page: "week",
+          target: "#content .week-strip",
+          title: "주간 일정으로 흐름을 봐요",
+          description: "날짜 칸을 누르면 그날의 일정이 아래에 표시돼요. 아래 입력란에서 추가하고, 날짜별 요약과 이번 주 진행 상황을 확인하세요.",
+          tip: "오늘·주간·월간 일정은 같은 날짜 기록을 함께 보여줘요."
+        },
+        {
+          page: "month",
+          target: "#content .calendar-grid",
+          title: "월간 캘린더로 큰 일정을 확인해요",
+          description: "달력에서 날짜를 선택하면 해당 날짜의 일정이 아래에 나타나요. 선택한 날짜 카드에서 바로 추가하거나 체크할 수 있어요.",
+          tip: "날짜를 눌러도 입력 팝업은 뜨지 않아요."
+        },
+        {
+          page: "memo",
+          target: "#content #memoSearch",
+          title: "빠른 메모는 생각날 때 적어요",
+          description: "일정으로 만들기 전의 생각이나 잊지 말아야 할 내용을 메모로 남겨요. 메모장에서 검색하고 카드 목록으로 다시 찾아볼 수 있어요.",
+          tip: "오늘 화면 왼쪽의 빠른 메모 입력란에서도 바로 기록할 수 있어요."
+        },
+        {
+          page: "anniversaries",
+          target: "#content .anniversary-list",
+          title: "멤버 경조사를 함께 확인해요",
+          description: "경조사는 멤버가 함께 보는 목록이에요. 오늘 화면에는 오늘 경조사가 있는지만 간단히 표시돼요.",
+          tip: "직접 추가하거나 Excel을 가져오는 기능은 지정된 관리자에게만 보여요."
+        },
+        {
+          page: "today",
+          target: "#saveStatus",
+          title: "기록은 자동으로 저장돼요",
+          description: "개인 프로필, 일정, 메모는 내 계정에 저장되고 다른 멤버에게 보이지 않아요. 경조사만 멤버와 공유돼요.",
+          tip: "상단 저장 표시를 확인하세요. 서버 저장에 실패하면 화면에 안내가 나타납니다."
+        }
+      ];
+      let tutorialIndex = 0;
+      let tutorialTarget = null;
+      function renderTutorialStep() {
+        const step = tutorialSteps[tutorialIndex];
+        page = step.page;
+        render();
+        if (tutorialTarget) tutorialTarget.classList.remove("tutorial-highlight");
+        tutorialTarget = $(step.target);
+        if (tutorialTarget) {
+          tutorialTarget.classList.add("tutorial-highlight");
+          tutorialTarget.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        $("#tutorialStep").textContent = `사용 방법 ${tutorialIndex + 1} / ${tutorialSteps.length}`;
+        $("#tutorialTitle").textContent = step.title;
+        $("#tutorialDescription").textContent = step.description;
+        $("#tutorialTip").textContent = step.tip;
+        $("#tutorialProgress").style.width = `${((tutorialIndex + 1) / tutorialSteps.length) * 100}%`;
+        $("#tutorialPrevious").disabled = tutorialIndex === 0;
+        $("#tutorialPrevious").classList.toggle("hidden", tutorialIndex === 0);
+        $("#tutorialNext").textContent = tutorialIndex === tutorialSteps.length - 1 ? "완료" : "다음";
+      }
+      function showTutorial(firstRun = false) {
+        if (!dataReady || (firstRun && data.tutorialSeen)) return;
+        tutorialIndex = 0;
+        renderTutorialStep();
+        const dialog = $("#tutorialDialog");
+        if (!dialog.open) dialog.showModal();
+      }
+      function showTutorialIfNeeded() {
+        if (!dataReady || data.tutorialSeen || $("#tutorialDialog").open) return;
+        showTutorial(true);
+      }
+      function finishTutorial() {
+        if (tutorialTarget) tutorialTarget.classList.remove("tutorial-highlight");
+        tutorialTarget = null;
+        data.tutorialSeen = true;
+        persist();
+        const dialog = $("#tutorialDialog");
+        if (dialog.open) dialog.close();
+      }
+      $("#helpButton").addEventListener("click", () => showTutorial());
+      $("#tutorialPrevious").addEventListener("click", () => {
+        if (tutorialIndex === 0) return;
+        tutorialIndex -= 1;
+        renderTutorialStep();
+      });
+      $("#tutorialNext").addEventListener("click", () => {
+        if (tutorialIndex === tutorialSteps.length - 1) {
+          finishTutorial();
+          return;
+        }
+        tutorialIndex += 1;
+        renderTutorialStep();
+      });
+      $("#tutorialDialog").addEventListener("cancel", event => {
+        event.preventDefault();
+        finishTutorial();
+      });
+      $("#tutorialDialog").addEventListener("close", () => {
+        if (tutorialTarget) tutorialTarget.classList.remove("tutorial-highlight");
+        tutorialTarget = null;
+      });
 
       function showApp() {
         $("#loginScreen").classList.add("hidden");
@@ -1297,12 +1553,94 @@
         showWelcomeSplash();
       }
 
+      const anniversaryFromRow = row => ({
+        id: row.id,
+        name: row.name,
+        date: row.recurring ? row.event_date.slice(5) : row.event_date,
+        type: row.event_type,
+        recurring: row.recurring
+      });
+      async function activateSession(session) {
+        currentUser = session.user;
+        const [{ data: savedRow, error: dataError }, { data: eventRows, error: eventsError }, { data: adminStatus, error: adminError }] = await Promise.all([
+          supabaseClient.from("member_data").select("data").eq("user_id", currentUser.id).maybeSingle(),
+          supabaseClient.from("shared_anniversaries").select("id,name,event_type,event_date,recurring").order("event_date"),
+          supabaseClient.rpc("is_app_admin")
+        ]);
+        if (dataError) throw dataError;
+        if (eventsError) throw eventsError;
+        if (adminError) throw adminError;
+        isAppAdmin = adminStatus === true;
+
+        const cached = localStorage.getItem(localDataKey(currentUser.id));
+        let importedLegacy = false;
+        if (savedRow) {
+          data = readData(JSON.stringify(savedRow.data));
+        } else if (cached) {
+          data = readData(cached);
+        } else {
+          const legacy = localStorage.getItem(DATA_KEY);
+          const reviewedKey = `${DATA_KEY}:legacy-import-reviewed`;
+          if (legacy && !localStorage.getItem(reviewedKey)) {
+            const shouldImport = window.confirm("이 브라우저에 남아 있는 기존 개인 기록(프로필, 일정, 메모)을 이 계정으로 옮길까요? 경조사 목록은 관리자 권한이 있어야 팀 공유 목록으로 옮길 수 있습니다.");
+            localStorage.setItem(reviewedKey, "true");
+            if (shouldImport) {
+              data = readData(legacy);
+              importedLegacy = true;
+            } else {
+              data = emptyData();
+            }
+          } else {
+            data = emptyData();
+          }
+        }
+        data.anniversaries = eventRows.map(anniversaryFromRow);
+        dataReady = true;
+        updateSidebar();
+        if (!savedRow && (cached || importedLegacy)) await saveCloudData();
+        showApp();
+        if (importedLegacy && data.anniversaries.length === 0) {
+          showToast("개인 기록을 계정으로 옮겼어요. 기존 경조사는 관리자 권한으로 다시 가져와야 해요.");
+        }
+      }
+
+      function showLoginScreen() {
+        currentUser = null;
+        isAppAdmin = false;
+        dataReady = false;
+        data = emptyData();
+        page = "today";
+        $("#loginForm").reset();
+        $("#loginError").textContent = "";
+        $("#loginScreen").classList.remove("hidden");
+        $("#app").classList.add("hidden");
+      }
+
+      async function initializeAuth() {
+        if (!supabaseClient) {
+          $("#loginError").textContent = "로그인 서비스를 불러오지 못했어요. 페이지를 새로고침해주세요.";
+          return;
+        }
+        supabaseClient.auth.onAuthStateChange(event => {
+          if (event === "SIGNED_OUT") showLoginScreen();
+        });
+        try {
+          const { data: { session }, error } = await supabaseClient.auth.getSession();
+          if (error) throw error;
+          if (session) await activateSession(session);
+        } catch (error) {
+          console.error("로그인 세션을 불러오지 못했습니다.", error);
+          $("#loginError").textContent = "계정 정보를 불러오지 못했어요. 다시 로그인해주세요.";
+        }
+      }
+
       function showWelcomeSplash() {
         const splash = $("#welcomeSplash");
         splash.showModal();
         const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 1800 : 4200;
         splash.dataset.timer = String(window.setTimeout(() => {
           if (splash.open) splash.close();
+          showTutorialIfNeeded();
         }, delay));
       }
 
@@ -1315,13 +1653,14 @@
         render();
         const splash = $("#welcomeSplash");
         if (splash.open) splash.close();
+        window.setTimeout(showTutorialIfNeeded, 0);
       }
 
       $$("#welcomeSplash [data-action=\"close-welcome\"]").forEach(button => {
         button.addEventListener("click", enterAppFromWelcome);
       });
 
-      $("#loginForm").addEventListener("submit", event => {
+      $("#loginForm").addEventListener("submit", async event => {
         event.preventDefault();
         const email = $("#loginEmail").value.trim();
         const password = $("#loginPassword").value;
@@ -1329,19 +1668,26 @@
           $("#loginError").textContent = "이메일과 비밀번호를 입력해주세요.";
           return;
         }
-        try {
-          localStorage.setItem(SESSION_KEY, email);
-        } catch (error) {
-          console.error("데모 세션을 저장하지 못했습니다.", error);
-          $("#loginError").textContent = "브라우저 저장 공간을 사용할 수 없어요.";
+        if (!supabaseClient) {
+          $("#loginError").textContent = "로그인 서비스를 불러오지 못했어요. 페이지를 새로고침해주세요.";
           return;
         }
-        $("#loginPassword").value = "";
+        $("#loginButton").disabled = true;
         $("#loginError").textContent = "";
-        showApp();
+        try {
+          const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) throw error;
+          await activateSession(authData.session);
+        } catch (error) {
+          console.error("로그인 또는 멤버 데이터를 불러오지 못했습니다.", error);
+          $("#loginError").textContent = "로그인에 실패했어요. 초대받은 이메일과 비밀번호를 확인해주세요.";
+        } finally {
+          $("#loginPassword").value = "";
+          $("#loginButton").disabled = false;
+        }
       });
 
-      document.addEventListener("click", event => {
+      document.addEventListener("click", async event => {
         const pageButton = event.target.closest("[data-page]");
         if (pageButton) {
           page = pageButton.dataset.page;
@@ -1356,6 +1702,10 @@
         if (!action) return;
         if (action.dataset.action === "close-welcome") {
           enterAppFromWelcome();
+          return;
+        }
+        if (action.dataset.action === "skip-tutorial") {
+          finishTutorial();
           return;
         }
         if (action.dataset.action === "shift") {
@@ -1390,10 +1740,20 @@
           showToast("일정을 삭제했어요.");
         }
         if (action.dataset.action === "delete-anniversary") {
-          data.anniversaries = data.anniversaries.filter(item => item.id !== action.dataset.id);
-          persist();
-          render();
-          showToast("경조사를 삭제했어요.");
+          if (!isAppAdmin) {
+            showToast("경조사 관리는 지정된 관리자만 할 수 있어요.");
+            return;
+          }
+          try {
+            const { error } = await supabaseClient.from("shared_anniversaries").delete().eq("id", action.dataset.id);
+            if (error) throw error;
+            data.anniversaries = data.anniversaries.filter(item => item.id !== action.dataset.id);
+            render();
+            showToast("경조사를 삭제했어요.");
+          } catch (error) {
+            console.error("공유 경조사를 삭제하지 못했습니다.", error);
+            showToast("경조사 삭제에 실패했어요. 연결 상태와 관리자 권한을 확인해주세요.");
+          }
         }
         if (action.dataset.action === "delete-memo") {
           data.memos = data.memos.filter(item => item.id !== action.dataset.id);
@@ -1424,6 +1784,7 @@
       });
       $("#welcomeSplash").addEventListener("close", event => {
         window.clearTimeout(Number(event.currentTarget.dataset.timer));
+        window.setTimeout(showTutorialIfNeeded, 0);
       });
 
       document.addEventListener("change", event => {
@@ -1448,8 +1809,47 @@
         if (taskText && !taskText.value.trim()) render();
       });
 
-      document.addEventListener("submit", event => {
+      document.addEventListener("submit", async event => {
         const form = event.target;
+        if (form.matches('[data-form="invite-member"]')) {
+          event.preventDefault();
+          if (!isAppAdmin) {
+            showToast("멤버 초대는 지정된 관리자만 할 수 있어요.");
+            return;
+          }
+          const email = String(new FormData(form).get("email") || "").trim().toLowerCase();
+          const status = $("#inviteStatus");
+          const submitButton = form.querySelector('button[type="submit"]');
+          if (!email) return;
+          submitButton.disabled = true;
+          status.textContent = "초대 메일을 보내고 있어요.";
+          try {
+            const { data: result, error } = await supabaseClient.functions.invoke("invite-member", { body: { email } });
+            if (error) {
+              let message = error.message;
+              if (error.context instanceof Response) {
+                try {
+                  const responseBody = await error.context.clone().json();
+                  if (responseBody.error) message = String(responseBody.error);
+                } catch (parseError) {
+                  console.error("초대 오류 응답을 읽지 못했습니다.", parseError);
+                }
+              }
+              throw new Error(message);
+            }
+            if (!result?.success) throw new Error("초대 기능에서 성공 응답을 받지 못했습니다.");
+            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 메일을 열어 비밀번호를 설정하도록 안내해주세요.`;
+            form.reset();
+            showToast("초대 메일을 전송했어요.");
+          } catch (error) {
+            console.error("멤버 초대 메일을 전송하지 못했습니다.", error);
+            status.textContent = `초대 메일을 보내지 못했어요. ${error.message || "잠시 후 다시 시도해주세요."}`;
+            showToast("초대에 실패했어요. 표시된 오류를 확인해주세요.");
+          } finally {
+            submitButton.disabled = false;
+          }
+          return;
+        }
         if (form.matches('[data-form="add-task"]')) {
           event.preventDefault();
           const text = form.elements.task.value.trim();
@@ -1472,16 +1872,31 @@
         }
         if (form.matches('[data-form="add-anniversary"]')) {
           event.preventDefault();
+          if (!isAppAdmin) {
+            showToast("경조사 관리는 지정된 관리자만 할 수 있어요.");
+            return;
+          }
           const formData = new FormData(form);
           const name = String(formData.get("name") || "").trim();
           const type = eventType(formData.get("type"));
           const fullDate = String(formData.get("date") || "");
-          const date = type === "생일" ? fullDate.slice(-5) : fullDate;
-          if (!name || !date) return;
-          data.anniversaries.push({ id: anniversaryId(), name, date, type, recurring: type === "생일" });
-          persist();
-          render();
-          showToast("멤버 경조사를 추가했어요.");
+          if (!name || !fullDate) return;
+          try {
+            const recurring = type === "생일";
+            const { data: row, error } = await supabaseClient.from("shared_anniversaries").insert({
+              name,
+              event_type: type,
+              event_date: recurring ? `2000-${fullDate.slice(-5)}` : fullDate,
+              recurring
+            }).select("id,name,event_type,event_date,recurring").single();
+            if (error) throw error;
+            data.anniversaries.push(anniversaryFromRow(row));
+            render();
+            showToast("멤버 경조사를 추가했어요.");
+          } catch (error) {
+            console.error("공유 경조사를 추가하지 못했습니다.", error);
+            showToast("경조사 추가에 실패했어요. 연결 상태와 관리자 권한을 확인해주세요.");
+          }
         }
         if (form.matches('[data-form="add-memo"]')) {
           event.preventDefault();
@@ -1560,15 +1975,18 @@
         $("#themeToggle").title = nextTheme === "light" ? "어두운 배경으로 전환" : "밝은 배경으로 전환";
         document.querySelector('meta[name="theme-color"]').content = nextTheme === "light" ? "#f2f5f4" : "#0a0c0c";
       });
-      $("#logoutButton").addEventListener("click", () => {
-        localStorage.removeItem(SESSION_KEY);
-        page = "today";
-        $("#loginForm").reset();
-        $("#loginScreen").classList.remove("hidden");
-        $("#app").classList.add("hidden");
+      $("#logoutButton").addEventListener("click", async () => {
+        try {
+          const { error } = await supabaseClient.auth.signOut();
+          if (error) throw error;
+          showLoginScreen();
+        } catch (error) {
+          console.error("로그아웃하지 못했습니다.", error);
+          showToast("로그아웃에 실패했어요. 잠시 후 다시 시도해주세요.");
+        }
       });
 
-      if (localStorage.getItem(SESSION_KEY)) showApp();
+      void initializeAuth();
     })();
   </script>
 </body>
