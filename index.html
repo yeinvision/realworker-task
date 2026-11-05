@@ -280,6 +280,10 @@
     .task-text:hover, .task-text:focus { border-color: var(--line); background: var(--input); }
     .task-row.done .task-text { color: var(--faint); text-decoration: line-through; }
     .task-priority { flex: none; width: 66px; height: 31px; padding: 0 5px; border: 1px solid var(--line); border-radius: 7px; background: var(--input); color: var(--ink); font-size: 11px; }
+    .task-priority.priority-s { border-color: color-mix(in srgb, var(--p-s) 55%, var(--line)); background: color-mix(in srgb, var(--p-s) 17%, var(--input)); color: var(--p-s); font-weight: 750; }
+    .task-priority.priority-a { border-color: color-mix(in srgb, var(--p-a) 55%, var(--line)); background: color-mix(in srgb, var(--p-a) 17%, var(--input)); color: var(--p-a); font-weight: 750; }
+    .task-priority.priority-b { border-color: color-mix(in srgb, var(--p-b) 50%, var(--line)); background: color-mix(in srgb, var(--p-b) 15%, var(--input)); color: var(--p-b); font-weight: 750; }
+    .task-priority.priority-c { border-color: color-mix(in srgb, var(--p-c) 55%, var(--line)); background: color-mix(in srgb, var(--p-c) 17%, var(--input)); color: var(--p-c); font-weight: 750; }
     .delete-task { width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: #a6afab; cursor: pointer; opacity: 0; }
     .task-row:hover .delete-task, .delete-task:focus-visible { opacity: 1; }
     .delete-task:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
@@ -689,6 +693,7 @@
         profile: { name: "", startDate: "", work: "", photo: "" },
         dailyPlans: {},
         schedules: {},
+        monthlySchedules: {},
         anniversaries: [],
         memos: [],
         wisdomMode: "rotate",
@@ -712,6 +717,7 @@
             profile: { name: "", startDate: "", work: "", photo: "", ...(parsed.profile || {}) },
             dailyPlans,
             schedules: parsed.schedules || {},
+            monthlySchedules: parsed.monthlySchedules || {},
             anniversaries: Array.isArray(parsed.anniversaries) ? parsed.anniversaries.filter(item => !/입사|근속/.test(item.type || "")) : [],
             memos: Array.isArray(parsed.memos) ? parsed.memos : [],
             wisdomMode: ["rotate", "quote", "scripture"].includes(parsed.wisdomMode) ? parsed.wisdomMode : "rotate",
@@ -789,7 +795,7 @@
       const monthKey = date => `${date.getFullYear()}-${pad(date.getMonth() + 1)}`;
       const monthTasksFor = date => {
         const prefix = monthKey(date);
-        return Object.entries(data.schedules)
+        return Object.entries(data.monthlySchedules)
           .filter(([key]) => key.startsWith(prefix) && /^\d{4}-\d{2}-\d{2}$/.test(key))
           .flatMap(([, tasks]) => tasks);
       };
@@ -803,8 +809,11 @@
           : `${monday.getFullYear()}년 ${monday.getMonth() + 1}월 ${monday.getDate()}일 – ${sunday.getMonth() + 1}월 ${sunday.getDate()}일`;
       };
       const escapeHtml = value => String(value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[char]);
-      const scheduleFor = key => data.schedules[key] || (data.schedules[key] = []);
-      const tasksFor = key => data.schedules[key] || [];
+      const scheduleFor = (key, kind = "day") => {
+        const schedules = kind === "month" ? data.monthlySchedules : data.schedules;
+        return schedules[key] || (schedules[key] = []);
+      };
+      const tasksFor = (key, kind = "day") => (kind === "month" ? data.monthlySchedules : data.schedules)[key] || [];
       const doneCount = tasks => tasks.filter(task => task.done).length;
       const completion = tasks => tasks.length ? Math.round(doneCount(tasks) / tasks.length * 100) : 0;
       const tenureText = startDate => {
@@ -818,7 +827,7 @@
         const remaining = months % 12;
         return `리얼워크 ${years ? `${years}년 ` : ""}${remaining ? `${remaining}개월` : years ? "" : "0개월"}째`;
       };
-      const scheduleKey = kind => kind === "day" ? dateKey(cursor) : weekKey(cursor);
+      const scheduleKey = kind => kind === "month" ? dateKey(cursor) : kind === "day" ? dateKey(cursor) : weekKey(cursor);
       const kindTitle = kind => ({ day: "오늘 할 일", week: "이번 주 할 일", month: "이번 달 할 일" })[kind];
       const kindSubtitle = kind => ({ day: "오늘 챙기고 싶은 일을 편하게 적어보세요.", week: "이번 주에 마무리하고 싶은 일을 모아보세요.", month: "이번 달에 잊지 않고 챙길 일을 적어보세요." })[kind];
       const priorityRank = { S: 0, A: 1, B: 2, C: 3 };
@@ -1111,14 +1120,14 @@
       }
 
       function taskList(kind, key, limit = Infinity) {
-        const tasks = tasksFor(key);
+        const tasks = tasksFor(key, kind);
         if (!tasks.length) return '<div class="empty">아직 등록한 일정이 없어요. 아래에서 추가해보세요.</div>';
         const ordered = [...tasks].sort((a, b) => (priorityRank[a.priority || "B"] ?? 2) - (priorityRank[b.priority || "B"] ?? 2));
         return `<div class="list">${ordered.slice(0, limit).map(task => `
           <div class="task-row ${task.done ? "done" : ""}">
             <input class="task-check" type="checkbox" data-action="toggle-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" ${task.done ? "checked" : ""} aria-label="${task.done ? "완료 취소" : "완료"}: ${escapeHtml(task.text)}">
-            <input class="task-text" type="text" maxlength="100" value="${escapeHtml(task.text)}" data-action="edit-task-text" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="할 일 내용 수정">
-            <select class="task-priority ${priorityClass(task.priority)}" data-action="edit-task-priority" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="우선순위 수정">
+            <input class="task-text" type="text" maxlength="100" value="${escapeHtml(task.text)}" data-action="edit-task-text" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="할 일 내용 수정">
+            <select class="task-priority ${priorityClass(task.priority)}" data-action="edit-task-priority" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="우선순위 수정">
               ${["S", "A", "B", "C"].map(priority => `<option value="${priority}" ${priority === (task.priority || "B") ? "selected" : ""}>${priority} 우선</option>`).join("")}
             </select>
             <button type="button" class="delete-task" data-action="delete-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="일정 삭제">×</button>
@@ -1134,7 +1143,7 @@
       }
 
       function scheduleCard(kind, key, options = {}) {
-        const tasks = tasksFor(key);
+        const tasks = tasksFor(key, kind);
         const title = options.title || kindTitle(kind);
         return `<section class="card card-pad">
           <div class="card-heading">
@@ -1289,7 +1298,7 @@
               </div>
               <div class="schedule-side">
                 <div class="card card-pad"><div class="card-heading"><div><h2>이번 주 진행</h2><p>하루별 일정을 모아 보여드려요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(weekTasks)}<small> / ${weekTasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(weekTasks)}%"></i></div></div></div>
-                <div class="tip"><strong>주간 일정 활용 팁</strong>각 날짜를 선택해 할 일을 적으면 오늘·월간 일정에도 함께 표시돼요.</div>
+                <div class="tip"><strong>주간 일정 활용 팁</strong>각 날짜를 선택해 기록하세요. 오늘 할 일과는 함께 보이고, 월간 일정과는 따로 관리돼요.</div>
               </div>
             </div>
           </div>`;
@@ -1305,7 +1314,7 @@
           const date = new Date(gridStart);
           date.setDate(gridStart.getDate() + index);
           const key = dateKey(date);
-          const tasks = tasksFor(key);
+          const tasks = tasksFor(key, "month");
           const outside = date.getMonth() !== cursor.getMonth();
           const selected = key === selectedDate;
           const isToday = key === dateKey(today);
@@ -1329,9 +1338,9 @@
                 </div>
               </section>
               <div class="schedule-side">
-                <div class="calendar-selected">${scheduleCard("day", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "선택한 날짜의 일정을 확인하고 아래에서 바로 추가하세요." })}</div>
+                <div class="calendar-selected">${scheduleCard("month", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "월간 일정만 따로 기록하고 아래에서 추가하세요." })}</div>
                 <div class="card card-pad"><div class="card-heading"><div><h2>이번 달 진행</h2><p>달력에 등록한 일정이에요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(tasks)}<small> / ${tasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(tasks)}%"></i></div></div></div>
-                <div class="tip"><strong>달력은 간단하게</strong>날짜를 선택하고 할 일을 적으면 끝이에요. 완료 체크는 오늘 일정과 달력에 함께 반영돼요.</div>
+                <div class="tip"><strong>달력은 간단하게</strong>날짜를 선택해 월간 일정만 따로 기록해요. 오늘·주간 일정에는 반영되지 않아요.</div>
               </div>
             </div>
           </div>`;
@@ -1449,14 +1458,14 @@
           target: "#content .week-strip",
           title: "주간 일정으로 흐름을 봐요",
           description: "날짜 칸을 누르면 그날의 일정이 아래에 표시돼요. 아래 입력란에서 추가하고, 날짜별 요약과 이번 주 진행 상황을 확인하세요.",
-          tip: "오늘·주간·월간 일정은 같은 날짜 기록을 함께 보여줘요."
+          tip: "오늘과 주간 일정은 같은 날짜 기록을 공유하고, 월간 일정은 따로 관리해요."
         },
         {
           page: "month",
           target: "#content .calendar-grid",
           title: "월간 캘린더로 큰 일정을 확인해요",
           description: "달력에서 날짜를 선택하면 해당 날짜의 일정이 아래에 나타나요. 선택한 날짜 카드에서 바로 추가하거나 체크할 수 있어요.",
-          tip: "날짜를 눌러도 입력 팝업은 뜨지 않아요."
+          tip: "월간 일정은 오늘·주간 일정과 따로 저장돼요."
         },
         {
           page: "memo",
@@ -1738,8 +1747,9 @@
           $("#topWisdom").innerHTML = wisdomCard(today);
         }
         if (action.dataset.action === "delete-task") {
-          const list = data.schedules[action.dataset.key] || [];
-          data.schedules[action.dataset.key] = list.filter(task => task.id !== action.dataset.id);
+          const schedules = action.dataset.kind === "month" ? data.monthlySchedules : data.schedules;
+          const list = schedules[action.dataset.key] || [];
+          schedules[action.dataset.key] = list.filter(task => task.id !== action.dataset.id);
           persist();
           render();
           showToast("일정을 삭제했어요.");
@@ -1795,7 +1805,8 @@
       document.addEventListener("change", event => {
         const checkbox = event.target.closest('[data-action="toggle-task"]');
         if (checkbox) {
-          const list = data.schedules[checkbox.dataset.key] || [];
+          const schedules = checkbox.dataset.kind === "month" ? data.monthlySchedules : data.schedules;
+          const list = schedules[checkbox.dataset.key] || [];
           const task = list.find(item => item.id === checkbox.dataset.id);
           if (task) task.done = checkbox.checked;
           persist();
@@ -1804,7 +1815,7 @@
         }
         const priority = event.target.closest('[data-action="edit-task-priority"]');
         if (priority) {
-          const task = (data.schedules[priority.dataset.key] || []).find(item => item.id === priority.dataset.id);
+          const task = tasksFor(priority.dataset.key, priority.dataset.kind).find(item => item.id === priority.dataset.id);
           if (task) task.priority = priority.value;
           persist();
           render();
@@ -1862,7 +1873,7 @@
           const kind = form.dataset.kind || "day";
           const key = form.dataset.key || scheduleKey(kind);
           const priority = form.elements.priority.value;
-          scheduleFor(key).push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, priority, done: false });
+          scheduleFor(key, kind).push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, priority, done: false });
           persist();
           render();
           showToast("일정을 추가했어요.");
@@ -1937,7 +1948,7 @@
           return;
         }
         if (event.target.matches('[data-action="edit-task-text"]')) {
-          const task = (data.schedules[event.target.dataset.key] || []).find(item => item.id === event.target.dataset.id);
+          const task = tasksFor(event.target.dataset.key, event.target.dataset.kind).find(item => item.id === event.target.dataset.id);
           if (task && event.target.value.trim()) {
             task.text = event.target.value;
             persist();
