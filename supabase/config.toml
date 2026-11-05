@@ -1,4 +1,7 @@
 project_id = "ztwctxsddydkdblgubbj"
 
+[auth.email]
+enable_confirmations = false
+
 [functions.invite-member]
 verify_jwt = false

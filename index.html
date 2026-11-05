@@ -159,6 +159,8 @@
     .demo-hint { margin: 15px 0 0; color: var(--muted); text-align: center; font-size: 11px; line-height: 1.7; }
     .form-error { min-height: 18px; margin: 8px 0 0; color: #c64d43; font-size: 12px; }
     .form-error.form-success { color: var(--accent-dark); }
+    .auth-mode-toggle { width: 100%; margin-top: 12px; padding: 8px; background: transparent; color: var(--accent); font-weight: 700; }
+    .auth-mode-toggle:hover { text-decoration: underline; }
 
     .app-shell { display: grid; grid-template-columns: 244px minmax(0, 1fr); min-height: 100vh; }
     .sidebar {
@@ -284,6 +286,7 @@
     .task-priority.priority-a { border-color: color-mix(in srgb, var(--p-a) 55%, var(--line)); background: color-mix(in srgb, var(--p-a) 17%, var(--input)); color: var(--p-a); font-weight: 750; }
     .task-priority.priority-b { border-color: color-mix(in srgb, var(--p-b) 50%, var(--line)); background: color-mix(in srgb, var(--p-b) 15%, var(--input)); color: var(--p-b); font-weight: 750; }
     .task-priority.priority-c { border-color: color-mix(in srgb, var(--p-c) 55%, var(--line)); background: color-mix(in srgb, var(--p-c) 17%, var(--input)); color: var(--p-c); font-weight: 750; }
+    .task-priority option { background: var(--input); color: var(--ink); }
     .delete-task { width: 26px; height: 26px; border: 0; border-radius: 6px; background: transparent; color: #a6afab; cursor: pointer; opacity: 0; }
     .task-row:hover .delete-task, .delete-task:focus-visible { opacity: 1; }
     .delete-task:hover { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); }
@@ -586,15 +589,24 @@
     <div class="login-panel">
       <form class="login-form" id="loginForm">
         <div class="brand" style="margin-bottom:30px"><img class="brand-mark" src="realwork-logo.png" alt="리얼워크 로고"><span>일잘러노트</span></div>
-        <h2>반가워요, 멤버님</h2>
-        <p class="sub">초대 이메일의 링크를 누르면 바로 시작할 수 있어요.<br>다시 로그인할 때는 이메일로 링크를 받아요.</p>
+        <h2 id="authTitle">반가워요, 멤버님</h2>
+        <p class="sub" id="authSubtitle">리얼워크 이메일과 비밀번호로 로그인하세요.</p>
         <div class="field">
           <label for="loginEmail">이메일</label>
-          <input id="loginEmail" type="email" placeholder="name@realwork.co.kr" autocomplete="email" required>
+          <input id="loginEmail" type="email" placeholder="name@realwork.group" autocomplete="username" required>
+        </div>
+        <div class="field">
+          <label for="loginPassword">비밀번호</label>
+          <input id="loginPassword" type="password" placeholder="비밀번호 입력" autocomplete="current-password" required>
+        </div>
+        <div class="field hidden" id="signupPasswordConfirmField">
+          <label for="signupPasswordConfirm">비밀번호 확인</label>
+          <input id="signupPasswordConfirm" type="password" placeholder="비밀번호 다시 입력" autocomplete="new-password">
         </div>
         <p id="loginError" class="form-error" aria-live="polite"></p>
-        <button class="primary" type="submit" id="loginButton">로그인 링크 보내기 <span aria-hidden="true">→</span></button>
-        <p class="demo-hint">초대받은 리얼워크 멤버만 이용할 수 있어요. 비밀번호 없이 이메일 링크로 로그인해요.<br>일정과 메모는 본인에게만 보이고, 경조사는 멤버와 공유돼요.</p>
+        <button class="primary" type="submit" id="loginButton">로그인하기 <span aria-hidden="true">→</span></button>
+        <button class="quiet auth-mode-toggle" type="button" id="authModeToggle">처음 이용하시나요? 회원가입</button>
+        <p class="demo-hint">리얼워크 이메일과 비밀번호로 가입하고 바로 이용할 수 있어요. 이메일 인증은 필요하지 않아요.</p>
       </form>
     </div>
   </section>
@@ -681,6 +693,7 @@
       let selectedDate = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, "0")}-${String(cursor.getDate()).padStart(2, "0")}`;
       let toastTimer;
       let currentUser = null;
+      let authMode = "login";
       let isAppAdmin = false;
       let dataReady = false;
       let cloudSaveTimer = null;
@@ -699,6 +712,21 @@
         wisdomMode: "rotate",
         tutorialSeen: false
       });
+      const createTaskId = () => crypto.randomUUID ? crypto.randomUUID() : `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const normalizeSchedules = schedules => {
+        const usedIds = new Set();
+        return Object.fromEntries(Object.entries(schedules || {}).map(([key, tasks]) => [
+          key,
+          Array.isArray(tasks) ? tasks.map(task => {
+            const normalized = task && typeof task === "object" ? { ...task } : { text: String(task || "") };
+            const id = typeof normalized.id === "string" && normalized.id && !usedIds.has(normalized.id)
+              ? normalized.id
+              : createTaskId();
+            usedIds.add(id);
+            return { ...normalized, id };
+          }) : []
+        ]));
+      };
       const readData = raw => {
         try {
           const parsed = JSON.parse(raw || "{}");
@@ -716,8 +744,8 @@
           return {
             profile: { name: "", startDate: "", work: "", photo: "", ...(parsed.profile || {}) },
             dailyPlans,
-            schedules: parsed.schedules || {},
-            monthlySchedules: parsed.monthlySchedules || {},
+            schedules: normalizeSchedules(parsed.schedules),
+            monthlySchedules: normalizeSchedules(parsed.monthlySchedules),
             anniversaries: Array.isArray(parsed.anniversaries) ? parsed.anniversaries.filter(item => !/입사|근속/.test(item.type || "")) : [],
             memos: Array.isArray(parsed.memos) ? parsed.memos : [],
             wisdomMode: ["rotate", "quote", "scripture"].includes(parsed.wisdomMode) ? parsed.wisdomMode : "rotate",
@@ -1156,13 +1184,24 @@
       }
 
       function dashboardAnniversaryCard() {
-        const key = dateKey(today);
-        const hasEvent = data.anniversaries.some(item => {
-          const date = eventDate(item.date);
-          return item.recurring || item.type === "생일" ? date.slice(-5) === key.slice(5) : date === key;
-        });
+        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        const upcoming = data.anniversaries
+          .map(item => ({ ...item, next: nextAnniversary(item) }))
+          .filter(item => item.next)
+          .sort((a, b) => a.next - b.next)
+          .slice(0, 3);
+        const rows = upcoming.length ? upcoming.map(item => {
+          const daysUntil = Math.round((item.next - todayStart) / 86400000);
+          const status = daysUntil === 0 ? "오늘" : `${daysUntil}일 후`;
+          const recurring = item.type === "생일" || item.recurring;
+          return `<div class="anniversary-row">
+            <span class="anniversary-date">${pad(item.next.getMonth() + 1)}.${pad(item.next.getDate())}</span>
+            <div class="anniversary-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.type || "경조사")} · ${status}${recurring ? " · 매년" : ""}</small></div>
+          </div>`;
+        }).join("") : `<div class="empty">예정된 경조사가 없어요.</div>`;
         return `<section class="card card-pad">
-          <div class="card-heading"><div><h2>오늘 경조사</h2><p>${hasEvent ? "오늘 챙길 경조사가 있어요." : "오늘 예정된 경조사가 없어요."}</p></div><button class="text-link" type="button" data-page="anniversaries">경조사 관리 ↗</button></div>
+          <div class="card-heading"><div><h2>다가오는 경조사</h2><p>가까운 경조사를 확인해보세요.</p></div><button class="text-link" type="button" data-page="anniversaries">전체 보기 ↗</button></div>
+          <div class="anniversary-list">${rows}</div>
         </section>`;
       }
 
@@ -1399,7 +1438,7 @@
       function renderInvites() {
         content.innerHTML = `<section class="profile-page">
           <h1>멤버 초대</h1>
-          <p>리얼워크 이메일로 초대 메일을 보내요. 초대된 멤버는 링크를 눌러 비밀번호 없이 접속할 수 있어요.</p>
+          <p>리얼워크 이메일로 초대 메일을 보내요. 초대된 멤버는 메일을 한 번 확인한 뒤 비밀번호로 로그인할 수 있어요.</p>
           <section class="card card-pad">
             ${isAppAdmin ? `<form data-form="invite-member">
               <div class="field"><label for="inviteEmail">초대할 멤버 이메일</label><input id="inviteEmail" name="email" type="email" maxlength="254" placeholder="name@realwork.group" autocomplete="email" required></div>
@@ -1478,7 +1517,7 @@
           page: "anniversaries",
           target: "#content .anniversary-list",
           title: "멤버 경조사를 함께 확인해요",
-          description: "경조사는 멤버가 함께 보는 목록이에요. 오늘 화면에는 오늘 경조사가 있는지만 간단히 표시돼요.",
+          description: "경조사는 멤버가 함께 보는 목록이에요. 오늘 화면에는 가까운 경조사가 최대 세 건 표시돼요.",
           tip: "직접 추가하거나 Excel을 가져오는 기능은 지정된 관리자에게만 보여요."
         },
         {
@@ -1617,6 +1656,7 @@
         data = emptyData();
         page = "today";
         $("#loginForm").reset();
+        setAuthMode("login");
         $("#loginError").textContent = "";
         $("#loginScreen").classList.remove("hidden");
         $("#app").classList.add("hidden");
@@ -1666,11 +1706,45 @@
         button.addEventListener("click", enterAppFromWelcome);
       });
 
+      function setAuthMode(mode) {
+        authMode = mode;
+        const signingUp = mode === "signup";
+        $("#authTitle").textContent = signingUp ? "계정 만들기" : "반가워요, 멤버님";
+        $("#authSubtitle").textContent = signingUp
+          ? "리얼워크 이메일로 가입해 일잘러노트를 시작하세요."
+          : "리얼워크 이메일과 비밀번호로 로그인하세요.";
+        $("#loginButton").innerHTML = signingUp ? '회원가입 <span aria-hidden="true">→</span>' : '로그인하기 <span aria-hidden="true">→</span>';
+        $("#loginPassword").autocomplete = signingUp ? "new-password" : "current-password";
+        $("#signupPasswordConfirmField").classList.toggle("hidden", !signingUp);
+        $("#signupPasswordConfirm").required = signingUp;
+        $("#authModeToggle").textContent = signingUp ? "이미 계정이 있나요? 로그인" : "처음 이용하시나요? 회원가입";
+      }
+
+      $("#authModeToggle").addEventListener("click", () => {
+        setAuthMode(authMode === "login" ? "signup" : "login");
+        $("#loginError").textContent = "";
+      });
+
       $("#loginForm").addEventListener("submit", async event => {
         event.preventDefault();
-        const email = $("#loginEmail").value.trim();
-        if (!email) {
-          $("#loginError").textContent = "이메일을 입력해주세요.";
+        const email = $("#loginEmail").value.trim().toLowerCase();
+        const password = $("#loginPassword").value;
+        const passwordConfirm = $("#signupPasswordConfirm").value;
+        const signingUp = authMode === "signup";
+        if (!email || !password) {
+          $("#loginError").textContent = "이메일과 비밀번호를 입력해주세요.";
+          return;
+        }
+        if (!/^[^\s@]+@realwork\.group$/i.test(email)) {
+          $("#loginError").textContent = "가입과 로그인은 @realwork.group 이메일만 사용할 수 있어요.";
+          return;
+        }
+        if (signingUp && password.length < 8) {
+          $("#loginError").textContent = "비밀번호는 8자 이상으로 입력해주세요.";
+          return;
+        }
+        if (signingUp && password !== passwordConfirm) {
+          $("#loginError").textContent = "비밀번호가 서로 일치하지 않아요.";
           return;
         }
         if (!supabaseClient) {
@@ -1678,25 +1752,41 @@
           return;
         }
         $("#loginButton").disabled = true;
-        $("#loginButton").textContent = "로그인 링크 보내는 중...";
+        $("#loginButton").textContent = signingUp ? "계정을 만들고 있어요..." : "로그인 중...";
         $("#loginError").textContent = "";
         $("#loginError").classList.remove("form-success");
         try {
-          const { error } = await supabaseClient.auth.signInWithOtp({
-            email,
-            options: {
-              shouldCreateUser: false,
-              emailRedirectTo: `${window.location.origin}${window.location.pathname}`
+          if (signingUp) {
+            const { data: authData, error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) throw error;
+            if (!authData.session) {
+              $("#loginError").textContent = "가입 직후 로그인되지 않았어요. Supabase Auth에서 이메일 인증(Confirm email)을 꺼야 바로 이용할 수 있어요.";
+              return;
             }
-          });
-          if (error) throw error;
-          $("#loginError").textContent = "로그인 링크를 보냈어요. 이메일을 확인하고 링크를 눌러 접속해주세요.";
-          $("#loginError").classList.add("form-success");
+            await activateSession(authData.session);
+          } else {
+            const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            await activateSession(authData.session);
+          }
         } catch (error) {
-          console.error("로그인 링크를 보내지 못했습니다.", error);
-          $("#loginError").textContent = "로그인 링크를 보내지 못했어요. 초대된 이메일인지 확인하고 잠시 후 다시 시도해주세요.";
+          console.error(signingUp ? "계정을 만들지 못했습니다." : "로그인 또는 멤버 데이터를 불러오지 못했습니다.", error);
+          const message = String(error.message || "").toLowerCase();
+          if (message.includes("rate limit")) {
+            $("#loginError").textContent = signingUp
+              ? "가입 요청 한도에 도달했어요. 잠시 후 다시 가입을 시도해주세요."
+              : "로그인 요청 한도에 도달했어요. 잠시 후 다시 시도해주세요.";
+          } else if (signingUp && /already registered|already exists|user already/i.test(message)) {
+            $("#loginError").textContent = "이미 가입된 이메일이에요. 로그인으로 전환해주세요.";
+          } else if (signingUp) {
+            $("#loginError").textContent = "가입에 실패했어요. 이메일 주소와 비밀번호를 확인해주세요.";
+          } else {
+            $("#loginError").textContent = "로그인에 실패했어요. 이메일 또는 비밀번호를 확인해주세요.";
+          }
         } finally {
-          $("#loginButton").innerHTML = '로그인 링크 보내기 <span aria-hidden="true">→</span>';
+          $("#loginPassword").value = "";
+          $("#signupPasswordConfirm").value = "";
+          $("#loginButton").innerHTML = authMode === "signup" ? '회원가입 <span aria-hidden="true">→</span>' : '로그인하기 <span aria-hidden="true">→</span>';
           $("#loginButton").disabled = false;
         }
       });
@@ -1837,6 +1927,11 @@
           const status = $("#inviteStatus");
           const submitButton = form.querySelector('button[type="submit"]');
           if (!email) return;
+          if (!/^[^\s@]+@realwork\.group$/i.test(email)) {
+            status.textContent = "초대는 @realwork.group 이메일만 가능해요.";
+            showToast("리얼워크 이메일 주소를 확인해주세요.");
+            return;
+          }
           submitButton.disabled = true;
           status.textContent = "초대 메일을 보내고 있어요.";
           try {
@@ -1854,7 +1949,7 @@
               throw new Error(message);
             }
             if (!result?.success) throw new Error("초대 기능에서 성공 응답을 받지 못했습니다.");
-            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 메일의 초대 링크를 눌러 비밀번호 없이 접속하면 돼요.`;
+            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 초대를 수락한 뒤 비밀번호로 로그인할 수 있어요.`;
             form.reset();
             showToast("초대 메일을 전송했어요.");
           } catch (error) {
@@ -1873,7 +1968,7 @@
           const kind = form.dataset.kind || "day";
           const key = form.dataset.key || scheduleKey(kind);
           const priority = form.elements.priority.value;
-          scheduleFor(key, kind).push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, priority, done: false });
+          scheduleFor(key, kind).push({ id: createTaskId(), text, priority, done: false });
           persist();
           render();
           showToast("일정을 추가했어요.");

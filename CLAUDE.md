@@ -31,7 +31,7 @@
 - 주간 날짜 요약은 더 높은 대비와 넉넉한 높이로 표시하되, 밝은 테마에서는 읽기 쉬운 어두운 글자색을 사용한다.
 - 앱 진입 환영 화면은 저장소에 제공된 멤버 사진을 사용한다. 건너뛰기 및 `prefers-reduced-motion`을 지원하고, 이미지는 서버로 보내지 않는다.
 - 저장 오류를 성공처럼 숨기지 않는다. 콘솔 오류와 사용자 안내를 제공한다.
-- 공개 가입은 비활성화하고 Supabase Auth에서 초대된 멤버만 로그인하도록 유지한다. 비밀번호를 앱에서 저장하지 않고 secret/service-role key를 프런트엔드에 넣지 않는다. publishable key는 RLS 정책을 전제로만 사용한다.
+- 회원가입은 `@realwork.group` 주소로 제한하고, 프런트엔드 검사와 `auth.users` 도메인 검증 트리거를 함께 유지한다. 이메일 인증 없이 가입 직후 세션이 생성되도록 Supabase Auth의 Confirm email을 끈다. 이메일 주소 소유 여부는 검증하지 않아 멤버 주소 사칭 위험이 있음을 문서화한다. 비밀번호를 앱 저장소나 자체 서버에 저장하지 않고, secret/service-role key를 프런트엔드에 넣지 않는다. publishable key는 RLS 정책을 전제로만 사용한다.
 - 앱 관리자 초대 기능은 Supabase Edge Function에서 처리하고, 요청 사용자의 로그인 및 `is_app_admin()` 권한을 검증한다. service-role key는 Supabase 서버 함수 환경에서만 사용하며 관리자 권한 부여 기능은 앱에 두지 않는다.
 - 사용자 데이터에는 Supabase Auth의 사용자 ID를 사용하고, 계정 간 데이터가 섞이지 않도록 로컬 캐시 키도 계정별로 분리한다.
 

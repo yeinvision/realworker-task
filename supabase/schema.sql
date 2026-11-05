@@ -87,3 +87,25 @@ create policy "Admins can delete shared anniversaries"
 
 grant select, insert, update, delete on public.member_data to authenticated;
 grant select, insert, update, delete on public.shared_anniversaries to authenticated;
+
+create or replace function public.enforce_realwork_email_domain()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if new.email is null or lower(split_part(new.email, '@', 2)) <> 'realwork.group' then
+    raise exception 'Only @realwork.group accounts are allowed.'
+      using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.enforce_realwork_email_domain() from public, anon, authenticated;
+
+drop trigger if exists enforce_realwork_email_domain on auth.users;
+create trigger enforce_realwork_email_domain
+  before insert or update of email on auth.users
+  for each row execute function public.enforce_realwork_email_domain();
