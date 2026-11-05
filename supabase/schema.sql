@@ -70,9 +70,10 @@ create policy "Authenticated members can view shared anniversaries"
   using (true);
 
 drop policy if exists "Admins can add shared anniversaries" on public.shared_anniversaries;
-create policy "Admins can add shared anniversaries"
+drop policy if exists "Authenticated members can add shared anniversaries" on public.shared_anniversaries;
+create policy "Authenticated members can add shared anniversaries"
   on public.shared_anniversaries for insert to authenticated
-  with check (public.is_app_admin());
+  with check (auth.uid() is not null);
 
 drop policy if exists "Admins can update shared anniversaries" on public.shared_anniversaries;
 create policy "Admins can update shared anniversaries"

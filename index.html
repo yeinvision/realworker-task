@@ -1004,10 +1004,6 @@
       };
       async function importAnniversaries(file) {
         const status = $("#anniversaryImportStatus");
-        if (!isAppAdmin) {
-          status.textContent = "경조사 가져오기는 지정된 관리자만 할 수 있어요.";
-          return;
-        }
         status.textContent = "엑셀 파일을 읽고 있어요.";
         try {
           const xlsx = await loadXlsx();
@@ -1184,24 +1180,13 @@
       }
 
       function dashboardAnniversaryCard() {
-        const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        const upcoming = data.anniversaries
-          .map(item => ({ ...item, next: nextAnniversary(item) }))
-          .filter(item => item.next)
-          .sort((a, b) => a.next - b.next)
-          .slice(0, 3);
-        const rows = upcoming.length ? upcoming.map(item => {
-          const daysUntil = Math.round((item.next - todayStart) / 86400000);
-          const status = daysUntil === 0 ? "오늘" : `${daysUntil}일 후`;
-          const recurring = item.type === "생일" || item.recurring;
-          return `<div class="anniversary-row">
-            <span class="anniversary-date">${pad(item.next.getMonth() + 1)}.${pad(item.next.getDate())}</span>
-            <div class="anniversary-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.type || "경조사")} · ${status}${recurring ? " · 매년" : ""}</small></div>
-          </div>`;
-        }).join("") : `<div class="empty">예정된 경조사가 없어요.</div>`;
+        const key = dateKey(today);
+        const hasEvent = data.anniversaries.some(item => {
+          const date = eventDate(item.date);
+          return item.recurring || item.type === "생일" ? date.slice(-5) === key.slice(5) : date === key;
+        });
         return `<section class="card card-pad">
-          <div class="card-heading"><div><h2>다가오는 경조사</h2><p>가까운 경조사를 확인해보세요.</p></div><button class="text-link" type="button" data-page="anniversaries">전체 보기 ↗</button></div>
-          <div class="anniversary-list">${rows}</div>
+          <div class="card-heading"><div><h2>오늘 경조사</h2><p>${hasEvent ? "오늘 챙길 경조사가 있어요." : "오늘 예정된 경조사가 없어요."}</p></div><button class="text-link" type="button" data-page="anniversaries">경조사 관리 ↗</button></div>
         </section>`;
       }
 
@@ -1219,10 +1204,10 @@
             <div class="anniversary-info"><strong>${escapeHtml(item.name)}</strong><small>${escapeHtml(item.type || "기념일")} · ${status}${isBirthday ? " · 매년" : ""}</small></div>
             ${isAppAdmin ? `<button type="button" class="delete-task" data-action="delete-anniversary" data-id="${escapeHtml(item.id)}" aria-label="${escapeHtml(item.name)} 기념일 삭제">×</button>` : ""}
           </div>`;
-        }).join("") : `<div class="empty">${isAppAdmin ? "아직 등록한 경조사가 없어요. 직접 추가하거나 Excel 파일을 가져와보세요." : "아직 공유된 경조사가 없어요."}</div>`;
+        }).join("") : `<div class="empty">아직 등록된 경조사가 없어요. 직접 추가하거나 Excel 파일을 가져와보세요.</div>`;
         return `<section class="card card-pad">
           <div class="card-heading"><div><h2>멤버 경조사</h2><p>생일은 매년, 다른 경조사는 해당 날짜에 한 번 표시해요.</p></div><span class="period-tag">${data.anniversaries.length}건</span></div>
-          ${isAppAdmin ? `<form class="anniversary-form" data-form="add-anniversary">
+          <form class="anniversary-form" data-form="add-anniversary">
             <input name="name" maxlength="30" placeholder="멤버 이름" aria-label="멤버 이름" required>
             <input name="date" type="date" aria-label="경조사 날짜" required>
             <select name="type" aria-label="경조사 종류"><option>생일</option><option>결혼</option><option>출산</option><option>조사</option><option>기타</option></select>
@@ -1230,7 +1215,8 @@
           </form>
           <label class="secondary excel-upload" for="anniversaryFile">엑셀 파일 가져오기</label>
           <input id="anniversaryFile" type="file" accept=".xlsx,.xls,.csv" class="hidden">
-          <p class="photo-help excel-help">권장 열: 멤버명, 날짜, 종류(생일·결혼·출산·조사). 또는 멤버명과 생일/결혼/출산/조사 날짜 열. 생일은 월/일, 다른 경조사는 연도 포함 날짜가 필요해요.</p>` : `<p class="photo-help">리얼워크 멤버가 함께 보는 목록이에요. 추가와 수정은 지정된 관리자에게 요청해주세요.</p>`}
+          <p class="photo-help excel-help">권장 열: 멤버명, 날짜, 종류(생일·결혼·출산·조사). 또는 멤버명과 생일/결혼/출산/조사 날짜 열. 생일은 월/일, 다른 경조사는 연도 포함 날짜가 필요해요.</p>
+          <p class="photo-help">리얼워크 멤버가 함께 보는 목록이며, 모든 멤버가 직접 추가하거나 Excel로 가져올 수 있어요. 삭제는 지정된 관리자만 할 수 있어요.</p>
           <p id="anniversaryImportStatus" class="photo-help" aria-live="polite"></p>
           <div class="anniversary-list">${rows}</div>
         </section>`;
@@ -1517,8 +1503,8 @@
           page: "anniversaries",
           target: "#content .anniversary-list",
           title: "멤버 경조사를 함께 확인해요",
-          description: "경조사는 멤버가 함께 보는 목록이에요. 오늘 화면에는 가까운 경조사가 최대 세 건 표시돼요.",
-          tip: "직접 추가하거나 Excel을 가져오는 기능은 지정된 관리자에게만 보여요."
+          description: "경조사는 멤버가 함께 보는 목록이에요. 오늘 화면에는 오늘 경조사가 있는지만 간단히 표시돼요.",
+          tip: "리얼워크 멤버라면 누구나 직접 추가하거나 Excel 파일을 가져올 수 있어요."
         },
         {
           page: "today",
@@ -1983,10 +1969,6 @@
         }
         if (form.matches('[data-form="add-anniversary"]')) {
           event.preventDefault();
-          if (!isAppAdmin) {
-            showToast("경조사 관리는 지정된 관리자만 할 수 있어요.");
-            return;
-          }
           const formData = new FormData(form);
           const name = String(formData.get("name") || "").trim();
           const type = eventType(formData.get("type"));
@@ -2006,7 +1988,7 @@
             showToast("멤버 경조사를 추가했어요.");
           } catch (error) {
             console.error("공유 경조사를 추가하지 못했습니다.", error);
-            showToast("경조사 추가에 실패했어요. 연결 상태와 관리자 권한을 확인해주세요.");
+            showToast("경조사 추가에 실패했어요. 연결 상태를 확인해주세요.");
           }
         }
         if (form.matches('[data-form="add-memo"]')) {
