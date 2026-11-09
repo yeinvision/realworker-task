@@ -110,3 +110,16 @@ drop trigger if exists enforce_realwork_email_domain on auth.users;
 create trigger enforce_realwork_email_domain
   before insert or update of email on auth.users
   for each row execute function public.enforce_realwork_email_domain();
+
+-- ------------------------------------------------------------
+-- 관리자 지정 (2026-11-09): ian@realwork.group
+-- 대상 계정이 먼저 앱에서 가입돼 있어야 한다. 가입 전이면 0건이 들어간다.
+insert into public.app_admins (user_id)
+select id from auth.users where lower(email) = 'ian@realwork.group'
+on conflict (user_id) do nothing;
+
+-- 확인: 현재 관리자 목록
+select u.email, a.created_at
+from public.app_admins a
+join auth.users u on u.id = a.user_id
+order by a.created_at;

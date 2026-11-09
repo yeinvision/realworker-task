@@ -272,8 +272,29 @@
     .profile-work span { color: #a4bbb3; font-size: 11px; }
     .profile-work p { margin: 5px 0 0; color: #e6f1ed; font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
     .list { display: grid; gap: 3px; }
-    .task-row { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 5px 3px; border-bottom: 1px solid var(--line-soft); }
-    .task-row:last-child { border-bottom: 0; }
+    .task-item { border-bottom: 1px solid var(--line-soft); }
+    .task-item:last-child { border-bottom: 0; }
+    .task-row { display: flex; align-items: center; gap: 11px; min-height: 42px; padding: 5px 3px; cursor: pointer; }
+    .task-controls { display: flex; flex: none; align-items: center; gap: 6px; }
+    .task-status { flex: none; width: 74px; height: 31px; padding: 0 5px; border: 1px solid var(--line); border-radius: 7px; background: var(--input); color: var(--ink); font-size: 11px; font-weight: 700; cursor: pointer; }
+    .task-status option { background: var(--input); color: var(--ink); font-weight: 400; }
+    .task-status.status-todo { color: var(--muted); }
+    .task-status.status-doing { border-color: color-mix(in srgb, #f0b45a 55%, var(--line)); background: color-mix(in srgb, #f0b45a 15%, var(--input)); color: #e2a23f; }
+    .task-status.status-done { border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: color-mix(in srgb, var(--accent) 15%, var(--input)); color: var(--accent); }
+    .task-status.status-stop { border-color: color-mix(in srgb, var(--danger) 45%, var(--line)); background: color-mix(in srgb, var(--danger) 12%, var(--input)); color: var(--danger); }
+    .task-row.status-stop .task-text { color: var(--faint); font-style: italic; }
+    .note-toggle { display: inline-flex; flex: none; align-items: center; justify-content: center; gap: 2px; min-width: 40px; height: 31px; padding: 0 7px; border: 1px solid var(--line); border-radius: 7px; background: transparent; color: var(--muted); font-size: 12px; cursor: pointer; }
+    .note-toggle span { font-size: 9px; }
+    .note-toggle:hover, .task-item.open .note-toggle { border-color: var(--accent); color: var(--accent); }
+    .note-toggle.has-note { border-color: color-mix(in srgb, var(--accent) 45%, var(--line)); background: var(--accent-soft); color: var(--accent); }
+    .task-detail { padding: 2px 3px 12px 33px; }
+    .task-note { display: block; width: 100%; min-height: 76px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; background: var(--input); color: var(--ink); font: inherit; font-size: 13px; line-height: 1.6; resize: vertical; outline: 0; }
+    .task-note:focus { border-color: var(--accent); }
+    .note-preview { display: block; width: calc(100% - 33px); margin: -6px 0 8px 33px; padding: 0 4px; overflow: hidden; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; text-align: left; white-space: nowrap; text-overflow: ellipsis; cursor: pointer; }
+    .note-preview:before { content: "📝 "; }
+    .note-preview:hover { color: var(--accent); }
+    .calendar-event.stopped { color: var(--muted); opacity: .55; text-decoration: line-through; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
     .task-check { display: grid; flex: none; width: 19px; height: 19px; margin: 0; place-items: center; border: 1.5px solid #cbd4d0; border-radius: 6px; appearance: none; cursor: pointer; }
     .task-check:checked { border-color: var(--accent); background: var(--accent); }
     .task-check:checked:after { content: "✓"; color: #fff; font-size: 12px; font-weight: 800; }
@@ -569,8 +590,14 @@
       .day-pill strong { margin: 3px 0 5px; font-size: 16px; }
       .day-pill small { font-size: 10px; }
       .memo-grid { grid-template-columns: 1fr; }
-      .task-row { gap: 6px; }
-      .task-priority { width: 58px; }
+      .task-row { flex-wrap: wrap; gap: 6px; }
+      .task-text { flex: 1 1 calc(100% - 40px); }
+      .task-controls { width: 100%; padding-left: 25px; }
+      .task-priority { width: 66px; }
+      .task-status { width: 78px; }
+      .delete-task { opacity: 1; margin-left: auto; }
+      .task-detail { padding-left: 25px; }
+      .note-preview { width: calc(100% - 25px); margin-left: 25px; margin-top: -2px; }
       .top-wisdom { margin: -9px auto 18px; }
     }
   </style>
@@ -622,7 +649,7 @@
         <button type="button" data-page="anniversaries" aria-label="멤버 경조사"><span class="nav-icon">♡</span><span>경조사</span></button>
         <button type="button" data-page="memo" aria-label="빠른 메모"><span class="nav-icon">✎</span><span>빠른 메모</span></button>
         <button type="button" data-page="profile" aria-label="내 프로필"><span class="nav-icon">♙</span><span>내 프로필</span></button>
-        <button type="button" class="hidden" id="inviteNavButton" data-page="invite" aria-label="멤버 초대"><span class="nav-icon">✉</span><span>멤버 초대</span></button>
+        <button type="button" class="hidden" id="inviteNavButton" data-page="invite" aria-label="가입 안내"><span class="nav-icon">✉</span><span>가입 안내</span></button>
       </nav>
       <div class="sidebar-bottom">
         <div class="profile-mini" id="profileShortcut" role="button" tabindex="0" aria-label="내 프로필 보기">
@@ -712,6 +739,11 @@
         wisdomMode: "rotate",
         tutorialSeen: false
       });
+      const TASK_STATUSES = ["todo", "doing", "done", "stop"];
+      const STATUS_LABEL = { todo: "To do", doing: "Doing", done: "Done", stop: "Stop" };
+      const taskStatus = task => TASK_STATUSES.includes(task.status) ? task.status : (task.done ? "done" : "todo");
+      const setTaskStatus = (task, status) => { task.status = status; task.done = status === "done"; };
+      const openTaskNotes = new Set();
       const createTaskId = () => crypto.randomUUID ? crypto.randomUUID() : `task-${Date.now()}-${Math.random().toString(36).slice(2)}`;
       const normalizeSchedules = schedules => {
         const usedIds = new Set();
@@ -723,7 +755,8 @@
               ? normalized.id
               : createTaskId();
             usedIds.add(id);
-            return { ...normalized, id };
+            const status = TASK_STATUSES.includes(normalized.status) ? normalized.status : (normalized.done ? "done" : "todo");
+            return { ...normalized, id, status, done: status === "done", note: typeof normalized.note === "string" ? normalized.note : "" };
           }) : []
         ]));
       };
@@ -842,8 +875,9 @@
         return schedules[key] || (schedules[key] = []);
       };
       const tasksFor = (key, kind = "day") => (kind === "month" ? data.monthlySchedules : data.schedules)[key] || [];
-      const doneCount = tasks => tasks.filter(task => task.done).length;
-      const completion = tasks => tasks.length ? Math.round(doneCount(tasks) / tasks.length * 100) : 0;
+      const activeTasks = tasks => tasks.filter(task => taskStatus(task) !== "stop");
+      const doneCount = tasks => tasks.filter(task => taskStatus(task) === "done").length;
+      const completion = tasks => activeTasks(tasks).length ? Math.round(doneCount(tasks) / activeTasks(tasks).length * 100) : 0;
       const tenureText = startDate => {
         if (!startDate) return "입사일을 등록해주세요";
         const start = new Date(`${startDate}T00:00:00`);
@@ -1147,15 +1181,38 @@
         const tasks = tasksFor(key, kind);
         if (!tasks.length) return '<div class="empty">아직 등록한 일정이 없어요. 아래에서 추가해보세요.</div>';
         const ordered = [...tasks].sort((a, b) => (priorityRank[a.priority || "B"] ?? 2) - (priorityRank[b.priority || "B"] ?? 2));
-        return `<div class="list">${ordered.slice(0, limit).map(task => `
-          <div class="task-row ${task.done ? "done" : ""}">
-            <input class="task-check" type="checkbox" data-action="toggle-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" ${task.done ? "checked" : ""} aria-label="${task.done ? "완료 취소" : "완료"}: ${escapeHtml(task.text)}">
-            <input class="task-text" type="text" maxlength="100" value="${escapeHtml(task.text)}" data-action="edit-task-text" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="할 일 내용 수정">
-            <select class="task-priority ${priorityClass(task.priority)}" data-action="edit-task-priority" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="우선순위 수정">
-              ${["S", "A", "B", "C"].map(priority => `<option value="${priority}" ${priority === (task.priority || "B") ? "selected" : ""}>${priority} 우선</option>`).join("")}
-            </select>
-            <button type="button" class="delete-task" data-action="delete-task" data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}" aria-label="일정 삭제">×</button>
-          </div>`).join("")}</div>`;
+        return `<div class="list">${ordered.slice(0, limit).map(task => {
+          const st = taskStatus(task);
+          const attrs = `data-kind="${kind}" data-key="${escapeHtml(key)}" data-id="${escapeHtml(task.id)}"`;
+          const noteId = `note-${kind}-${escapeHtml(task.id)}`;
+          const open = openTaskNotes.has(task.id);
+          const hasNote = Boolean((task.note || "").trim());
+          return `<div class="task-item ${open ? "open" : ""}">
+          <div class="task-row status-${st} ${task.done ? "done" : ""}" data-action="row-toggle-note" ${attrs}>
+            <input class="task-check" type="checkbox" data-action="toggle-task" ${attrs} ${task.done ? "checked" : ""} aria-label="${task.done ? "완료 취소" : "완료"}: ${escapeHtml(task.text)}">
+            <input class="task-text" type="text" maxlength="100" value="${escapeHtml(task.text)}" data-action="edit-task-text" ${attrs} aria-label="할 일 내용 수정">
+            <div class="task-controls">
+              <select class="task-priority ${priorityClass(task.priority)}" data-action="edit-task-priority" ${attrs} aria-label="우선순위 수정">
+                ${["S", "A", "B", "C"].map(priority => `<option value="${priority}" ${priority === (task.priority || "B") ? "selected" : ""}>${priority} 우선</option>`).join("")}
+              </select>
+              <select class="task-status status-${st}" data-action="edit-task-status" ${attrs} aria-label="진척도 수정">
+                ${TASK_STATUSES.map(value => `<option value="${value}" ${value === st ? "selected" : ""}>${STATUS_LABEL[value]}</option>`).join("")}
+              </select>
+              <button type="button" class="note-toggle ${hasNote ? "has-note" : ""}" data-action="toggle-note" ${attrs} aria-expanded="${open}" aria-controls="${noteId}" aria-label="${open ? "세부 메모 닫기" : "세부 메모 열기"}" title="세부 메모">${hasNote ? "📝" : "＋"}<span>${open ? "▴" : "▾"}</span></button>
+              <button type="button" class="delete-task" data-action="delete-task" ${attrs} aria-label="일정 삭제">×</button>
+            </div>
+          </div>
+          ${open ? `<div class="task-detail" id="${noteId}">
+            <label class="sr-only" for="${noteId}-text">세부 메모: ${escapeHtml(task.text)}</label>
+            <textarea id="${noteId}-text" class="task-note" data-action="edit-task-note" ${attrs} rows="3" maxlength="5000" placeholder="세부 내용, 진행 상황, 참고 링크 등을 자유롭게 적어보세요.">${escapeHtml(task.note || "")}</textarea>
+          </div>` : (hasNote ? `<button type="button" class="note-preview" data-action="toggle-note" ${attrs} aria-label="세부 메모 열기">${escapeHtml(task.note.trim().split("\n")[0].slice(0, 80))}</button>` : "")}
+          </div>`;
+        }).join("")}</div>`;
+      }
+
+      function autoSizeNote(area) {
+        area.style.height = "auto";
+        area.style.height = Math.min(Math.max(area.scrollHeight + 2, 76), 420) + "px";
       }
 
       function composer(kind, key) {
@@ -1172,7 +1229,7 @@
         return `<section class="card card-pad">
           <div class="card-heading">
             <div><h2>${title}</h2><p>${options.subtitle || kindSubtitle(kind)}</p></div>
-            <span class="period-tag">${doneCount(tasks)} / ${tasks.length} 완료</span>
+            <span class="period-tag">${doneCount(tasks)} / ${activeTasks(tasks).length} 완료</span>
           </div>
           ${taskList(kind, key, options.limit)}
           ${composer(kind, key)}
@@ -1300,7 +1357,7 @@
           const tasks = tasksFor(key);
           const isToday = key === dateKey(today);
           const summary = tasks.length
-            ? `${tasks.slice(0, 2).map(task => `<small title="${escapeHtml(task.text)}">${task.done ? "✓ " : ""}${escapeHtml(task.text)}</small>`).join("")}${tasks.length > 2 ? `<small>+${tasks.length - 2}개</small>` : ""}`
+            ? `${tasks.slice(0, 2).map(task => `<small title="${escapeHtml(task.text)}">${task.done ? "✓ " : taskStatus(task) === "stop" ? "■ " : taskStatus(task) === "doing" ? "▶ " : ""}${escapeHtml(task.text)}</small>`).join("")}${tasks.length > 2 ? `<small>+${tasks.length - 2}개</small>` : ""}`
             : "<small>일정 없음</small>";
           return `<button type="button" class="day-pill ${isToday ? "today" : ""} ${key === selectedDate ? "selected" : ""}" data-action="select-week-date" data-date="${key}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 일정 ${tasks.length}개">
             <span>${label}</span><strong>${date.getDate()}</strong>${summary}
@@ -1322,7 +1379,7 @@
                 ${scheduleCard("day", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "선택한 날짜의 일정을 확인하고 아래에서 바로 추가하세요." })}
               </div>
               <div class="schedule-side">
-                <div class="card card-pad"><div class="card-heading"><div><h2>이번 주 진행</h2><p>하루별 일정을 모아 보여드려요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(weekTasks)}<small> / ${weekTasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(weekTasks)}%"></i></div></div></div>
+                <div class="card card-pad"><div class="card-heading"><div><h2>이번 주 진행</h2><p>하루별 일정을 모아 보여드려요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(weekTasks)}<small> / ${activeTasks(weekTasks).length}개</small></strong><div class="progress-track"><i style="width:${completion(weekTasks)}%"></i></div></div></div>
                 <div class="tip"><strong>주간 일정 활용 팁</strong>각 날짜를 선택해 기록하세요. 오늘 할 일과는 함께 보이고, 월간 일정과는 따로 관리돼요.</div>
               </div>
             </div>
@@ -1343,7 +1400,7 @@
           const outside = date.getMonth() !== cursor.getMonth();
           const selected = key === selectedDate;
           const isToday = key === dateKey(today);
-          const events = tasks.slice(0, 2).map(task => `<span class="calendar-event ${task.done ? "done" : ""} ${priorityClass(task.priority)}" title="${escapeHtml(task.text)}">${escapeHtml(task.text)}</span>`).join("");
+          const events = tasks.slice(0, 2).map(task => `<span class="calendar-event ${task.done ? "done" : ""} ${taskStatus(task) === "stop" ? "stopped" : ""} ${priorityClass(task.priority)}" title="${escapeHtml(task.text)}">${escapeHtml(task.text)}</span>`).join("");
           const more = tasks.length > 2 ? `<span class="calendar-more">+${tasks.length - 2}개</span>` : "";
           return `<button type="button" class="calendar-cell ${outside ? "outside" : ""} ${selected ? "selected" : ""} ${isToday ? "today" : ""}" data-action="select-date" data-date="${key}" aria-label="${date.getMonth() + 1}월 ${date.getDate()}일, 일정 ${tasks.length}개">
             <span class="calendar-date">${date.getDate()}</span>${events}${more}
@@ -1364,7 +1421,7 @@
               </section>
               <div class="schedule-side">
                 <div class="calendar-selected">${scheduleCard("month", selectedDate, { title: `${selected.getMonth() + 1}월 ${selected.getDate()}일 일정`, subtitle: "월간 일정만 따로 기록하고 아래에서 추가하세요." })}</div>
-                <div class="card card-pad"><div class="card-heading"><div><h2>이번 달 진행</h2><p>달력에 등록한 일정이에요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(tasks)}<small> / ${tasks.length}개</small></strong><div class="progress-track"><i style="width:${completion(tasks)}%"></i></div></div></div>
+                <div class="card card-pad"><div class="card-heading"><div><h2>이번 달 진행</h2><p>달력에 등록한 일정이에요.</p></div></div><div class="stat"><span>완료</span><strong>${doneCount(tasks)}<small> / ${activeTasks(tasks).length}개</small></strong><div class="progress-track"><i style="width:${completion(tasks)}%"></i></div></div></div>
                 <div class="tip"><strong>달력은 간단하게</strong>날짜를 선택해 월간 일정만 따로 기록해요. 오늘·주간 일정에는 반영되지 않아요.</div>
               </div>
             </div>
@@ -1422,17 +1479,16 @@
       }
 
       function renderInvites() {
+        const appUrl = location.origin + location.pathname;
         content.innerHTML = `<section class="profile-page">
-          <h1>멤버 초대</h1>
-          <p>리얼워크 이메일로 초대 메일을 보내요. 초대된 멤버는 메일을 한 번 확인한 뒤 비밀번호로 로그인할 수 있어요.</p>
+          <h1>가입 안내</h1>
+          <p>초대 메일 없이, 멤버가 직접 리얼워크 이메일로 가입해요. 아래 주소를 메신저로 공유해주세요.</p>
           <section class="card card-pad">
-            ${isAppAdmin ? `<form data-form="invite-member">
-              <div class="field"><label for="inviteEmail">초대할 멤버 이메일</label><input id="inviteEmail" name="email" type="email" maxlength="254" placeholder="name@realwork.group" autocomplete="email" required></div>
-              <p id="inviteStatus" class="photo-help" aria-live="polite"></p>
-              <button class="primary" type="submit">초대 메일 보내기</button>
-            </form>` : `<p role="status">멤버 초대는 지정된 관리자만 할 수 있어요.</p>`}
+            ${isAppAdmin ? `<div class="field"><label for="joinUrl">일잘러노트 주소</label><input id="joinUrl" type="text" value="${escapeHtml(appUrl)}" readonly></div>
+              <button class="primary" type="button" data-action="copy-join-guide">가입 안내 문구 복사</button>
+              <p id="inviteStatus" class="photo-help" aria-live="polite"></p>` : `<p role="status">가입 안내는 지정된 관리자만 볼 수 있어요.</p>`}
           </section>
-          <div class="tip"><strong>초대 권한 안내</strong>초대된 계정은 일반 멤버로 추가돼요. 관리자 권한은 자동으로 부여되지 않으며, 관리자 추가는 Supabase에서 별도로 진행해야 해요.</div>
+          <div class="tip"><strong>가입 방법</strong>주소에 들어가 회원가입을 누르고, @realwork.group 이메일과 비밀번호를 정하면 바로 쓸 수 있어요. 인증 메일은 보내지 않아요. 가입한 계정은 일반 멤버이고, 관리자 지정은 Supabase에서 따로 해요.</div>
         </section>`;
       }
 
@@ -1454,6 +1510,7 @@
         else if (page === "invite") renderInvites();
         else renderProfile();
         updateSidebar();
+        document.querySelectorAll(".task-note").forEach(autoSizeNote);
       }
 
       const tutorialSteps = [
@@ -1778,6 +1835,36 @@
       });
 
       document.addEventListener("click", async event => {
+        if (event.target.closest('[data-action="copy-join-guide"]')) {
+          const url = location.origin + location.pathname;
+          const text = `[리얼워크 일잘러노트]
+${url}
+
+회원가입 → @realwork.group 이메일과 비밀번호 입력하면 바로 쓸 수 있어요. (인증 메일 없음)`;
+          try {
+            await navigator.clipboard.writeText(text);
+            $("#inviteStatus").textContent = "가입 안내 문구를 복사했어요. 메신저에 붙여넣어 공유해주세요.";
+          } catch (error) {
+            console.error("가입 안내 문구를 복사하지 못했습니다.", error);
+            const input = $("#joinUrl"); input.focus(); input.select();
+            $("#inviteStatus").textContent = "자동 복사가 막혔어요. 선택된 주소를 직접 복사해주세요.";
+          }
+          return;
+        }
+        const noteToggle = event.target.closest('[data-action="toggle-note"]');
+        const rowToggle = !noteToggle && event.target.closest('[data-action="row-toggle-note"]');
+        if (noteToggle || (rowToggle && !event.target.closest("input, select, button, textarea, a"))) {
+          const el = noteToggle || rowToggle;
+          const id = el.dataset.id;
+          const opening = !openTaskNotes.has(id);
+          if (opening) openTaskNotes.add(id); else openTaskNotes.delete(id);
+          render();
+          if (opening) {
+            const area = document.querySelector(`.task-note[data-id="${CSS.escape(id)}"][data-kind="${el.dataset.kind}"]`);
+            if (area) { autoSizeNote(area); area.focus(); area.setSelectionRange(area.value.length, area.value.length); }
+          }
+          return;
+        }
         const pageButton = event.target.closest("[data-page]");
         if (pageButton) {
           page = pageButton.dataset.page;
@@ -1884,7 +1971,15 @@
           const schedules = checkbox.dataset.kind === "month" ? data.monthlySchedules : data.schedules;
           const list = schedules[checkbox.dataset.key] || [];
           const task = list.find(item => item.id === checkbox.dataset.id);
-          if (task) task.done = checkbox.checked;
+          if (task) setTaskStatus(task, checkbox.checked ? "done" : "todo");
+          persist();
+          render();
+          return;
+        }
+        const statusSelect = event.target.closest('[data-action="edit-task-status"]');
+        if (statusSelect) {
+          const task = tasksFor(statusSelect.dataset.key, statusSelect.dataset.kind).find(item => item.id === statusSelect.dataset.id);
+          if (task) setTaskStatus(task, statusSelect.value);
           persist();
           render();
           return;
@@ -1903,50 +1998,6 @@
 
       document.addEventListener("submit", async event => {
         const form = event.target;
-        if (form.matches('[data-form="invite-member"]')) {
-          event.preventDefault();
-          if (!isAppAdmin) {
-            showToast("멤버 초대는 지정된 관리자만 할 수 있어요.");
-            return;
-          }
-          const email = String(new FormData(form).get("email") || "").trim().toLowerCase();
-          const status = $("#inviteStatus");
-          const submitButton = form.querySelector('button[type="submit"]');
-          if (!email) return;
-          if (!/^[^\s@]+@realwork\.group$/i.test(email)) {
-            status.textContent = "초대는 @realwork.group 이메일만 가능해요.";
-            showToast("리얼워크 이메일 주소를 확인해주세요.");
-            return;
-          }
-          submitButton.disabled = true;
-          status.textContent = "초대 메일을 보내고 있어요.";
-          try {
-            const { data: result, error } = await supabaseClient.functions.invoke("invite-member", { body: { email } });
-            if (error) {
-              let message = error.message;
-              if (error.context instanceof Response) {
-                try {
-                  const responseBody = await error.context.clone().json();
-                  if (responseBody.error) message = String(responseBody.error);
-                } catch (parseError) {
-                  console.error("초대 오류 응답을 읽지 못했습니다.", parseError);
-                }
-              }
-              throw new Error(message);
-            }
-            if (!result?.success) throw new Error("초대 기능에서 성공 응답을 받지 못했습니다.");
-            status.textContent = `${email} 주소로 초대 메일을 전송했어요. 초대를 수락한 뒤 비밀번호로 로그인할 수 있어요.`;
-            form.reset();
-            showToast("초대 메일을 전송했어요.");
-          } catch (error) {
-            console.error("멤버 초대 메일을 전송하지 못했습니다.", error);
-            status.textContent = `초대 메일을 보내지 못했어요. ${error.message || "잠시 후 다시 시도해주세요."}`;
-            showToast("초대에 실패했어요. 표시된 오류를 확인해주세요.");
-          } finally {
-            submitButton.disabled = false;
-          }
-          return;
-        }
         if (form.matches('[data-form="add-task"]')) {
           event.preventDefault();
           const text = form.elements.task.value.trim();
@@ -1954,7 +2005,7 @@
           const kind = form.dataset.kind || "day";
           const key = form.dataset.key || scheduleKey(kind);
           const priority = form.elements.priority.value;
-          scheduleFor(key, kind).push({ id: createTaskId(), text, priority, done: false });
+          scheduleFor(key, kind).push({ id: createTaskId(), text, priority, status: "todo", done: false, note: "" });
           persist();
           render();
           showToast("일정을 추가했어요.");
@@ -2022,6 +2073,15 @@
           if (event.target.dataset.plan === "promise") plan.promise = event.target.value;
           else plan.keywords[Number(event.target.dataset.keywordIndex)] = event.target.value;
           persist();
+          return;
+        }
+        if (event.target.matches('[data-action="edit-task-note"]')) {
+          const task = tasksFor(event.target.dataset.key, event.target.dataset.kind).find(item => item.id === event.target.dataset.id);
+          if (task) {
+            task.note = event.target.value;
+            autoSizeNote(event.target);
+            persist();
+          }
           return;
         }
         if (event.target.matches('[data-action="edit-task-text"]')) {

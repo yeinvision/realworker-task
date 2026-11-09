@@ -18,6 +18,8 @@ GitHub 저장소 이름: `realworker-task`
 - 프로필 사진, 입사일, 이름(선택), 요즘 하는 일 프로필
 - 오늘의 방향 한 가지와 기억할 키워드 세 가지
 - 오늘·주간은 같은 날짜별 일정을 공유하고, 월간 일정은 별도로 관리합니다. S/A/B/C 우선순위는 색상으로 구분됩니다.
+- 일정마다 진척도(To do / Doing / Done / Stop)를 고를 수 있습니다. 체크하면 Done이 되고, Stop은 완료 수 계산에서 빠집니다.
+- 일정을 누르면 아래에 세부 메모 칸이 열립니다. 메모가 있는 일정은 첫 줄이 미리 보입니다.
 - 우선순위를 바꾸면 선택한 할 일만 수정되며, 선택 메뉴의 항목은 중립색으로 유지됩니다.
 - 주간 날짜별 일정 요약(높은 대비와 넉넉한 날짜 칸), 날짜를 선택하면 일정 목록을 확인하고 아래 입력란에서 추가하는 월간 캘린더
 - 화면 상단 오늘의 문구: 번갈아 보기/명언/말씀 버튼으로 선택하며 선택을 저장
@@ -26,7 +28,7 @@ GitHub 저장소 이름: `realworker-task`
 - 대시보드 왼쪽의 빠른 메모 입력, 메모장 내 검색 및 일부 내용만 보이는 카드형 목록
 - 오늘 대시보드의 일간·주간·월간 통계 요약 제거
 - 오늘 대시보드의 경조사 유무 안내
-- 앱 관리자에게만 보이는 멤버 초대 메뉴와 초대 이메일 전송
+- 앱 관리자에게만 보이는 가입 안내 메뉴(주소·안내 문구 복사, 초대 메일 없음)
 - `.xlsx`, `.xls`, `.csv` 경조사 목록 업로드
 - 브라우저 로컬 저장 및 모바일 대응 화면
 - 오늘 할 일부터 시작할 수 있으며, 프로필 작성은 선택 사항
@@ -42,7 +44,8 @@ GitHub 저장소 이름: `realworker-task`
 - `supabase/schema.sql`은 테이블, RLS 정책, 관리자 권한 검사를 정의합니다. 현재 공개 프런트엔드에는 브라우저용 publishable key만 사용하며, secret/service-role key를 넣으면 안 됩니다.
 - 가입은 앱에서 가능하지만 `@realwork.group` 도메인만 허용하며, 데이터베이스 트리거도 도메인을 검사합니다. 이메일 주소 소유 여부는 확인하지 않으므로 다른 사람이 멤버의 회사 이메일 주소를 먼저 등록해 사칭할 위험이 있습니다. 관리자 지정은 Supabase에서 별도로 진행합니다.
 - Supabase Auth의 Email provider에서 이메일 인증(Confirm email)을 꺼야 가입 직후 세션이 생성됩니다. 로컬 Supabase 설정도 `supabase/config.toml`에서 확인할 수 있습니다.
-- 앱에서 보내는 멤버 초대는 `supabase/functions/invite-member` Edge Function을 사용합니다. 함수는 로그인 세션과 `is_app_admin()` 권한을 서버에서 확인한 뒤 초대하며, 초대된 계정은 일반 멤버입니다. 관리자 권한은 자동 부여되지 않습니다.
+- 초대 메일은 보내지 않습니다. 멤버는 앱 주소에서 직접 가입하고, 관리자는 '가입 안내' 화면에서 주소와 안내 문구를 복사해 공유합니다. `supabase/functions/invite-member`는 더 이상 앱에서 호출하지 않습니다(Supabase에 배포된 함수는 대시보드에서 삭제해도 됩니다).
+- 관리자 지정: Supabase SQL Editor에서 `supabase/schema.sql` 맨 아래 '관리자 지정' 쿼리를 실행합니다. 대상 계정이 먼저 가입돼 있어야 합니다.
 - Edge Function은 `supabase functions deploy invite-member --project-ref ztwctxsddydkdblgubbj`로 배포하고, Supabase Function Secrets의 `INVITE_ALLOWED_ORIGINS`에는 운영 도메인 `https://realworker-task.vercel.app`을 등록해야 합니다. Vercel의 배포별 미리보기 주소를 쓸 때는 그 origin도 정확히 추가해야 합니다. Supabase의 함수 기본 환경 변수로 제공되는 service-role key는 서버 함수에서만 사용합니다.
 - 단일 정적 HTML이므로 Supabase URL과 publishable key는 `index.html`에 포함됩니다. 데이터 보안은 비밀 키가 아니라 RLS 정책에 의존합니다.
 - 말씀은 퍼블릭 도메인 KJV를 바탕으로 절 전체를 한국어로 옮긴 비공식 자체 번역이며, 각 절의 KJV 출처를 연결합니다.
