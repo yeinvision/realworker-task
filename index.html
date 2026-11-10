@@ -635,12 +635,20 @@
 .ne-emojis.open{display:grid}
 .ne-emojis button{border:0;background:transparent;border-radius:8px;height:36px;font-size:20px;padding:0;cursor:pointer}
 .ne-emojis button:hover{background:var(--hover,#F3F5F7)}
+/* 글자 색 버튼(A 아래 무지개 줄)과 색 고르기 */
+.ne-color-ico{display:inline-block;padding-bottom:1px;border-bottom:3px solid;border-image:linear-gradient(90deg,#e5484d,#e8730c,#c99a06,#2f9e44,#3b82f6,#9b59d0) 1;font-weight:700}
+.ne-colors{position:absolute;top:calc(100% + 4px);left:8px;z-index:30;display:none;grid-template-columns:repeat(4,64px);gap:4px;padding:8px;background:var(--modal,#FFFFFF);border:1px solid var(--line,#D0D7DE);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.ne-colors.open{display:grid}
+.ne-colors button{display:flex;align-items:center;gap:6px;height:34px;padding:0 8px;border:1px solid transparent;border-radius:8px;background:transparent;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+.ne-colors button span{font-size:12px;font-weight:400;color:var(--ink,#1F2328)}
+.ne-colors button:hover{background:var(--hover,#F3F5F7);border-color:var(--line,#D0D7DE)}
+.ne-colors .ne-color-default{color:var(--ink,#1F2328)}
 /* 저장된 메모를 읽기 전용으로 보여줄 때: <div class="ne-view">${clean(html)}</div> */
 .ne-view{line-height:1.7;word-break:break-word;white-space:pre-wrap}
 .ne-view ol,.ne-view ul{margin:2px 0;padding-left:28px}
 .ne-view ol ol > li::marker{content:counter(list-item) ") "}
 .ne-view ol ol ol > li::marker{content:counter(list-item, lower-alpha) ") "}
-@media (max-width:760px){.ne-hint{display:none}.ne-emojis{grid-template-columns:repeat(6,40px)}}
+@media (max-width:760px){.ne-hint{display:none}.ne-emojis{grid-template-columns:repeat(6,40px)}.ne-colors{grid-template-columns:repeat(4,60px)}}
 
     /* 앱 맞춤: 노션식 편집기 */
     .task-detail .ne-rte { min-height: 90px; max-height: 420px; overflow: auto; }
@@ -776,7 +784,7 @@
   <script>
 /* 노션식 메모 편집기 (Notion-style memo editor)
  * 의존성 없음 · 브라우저 기본 contenteditable + execCommand 사용
- * 기능: 굵게(Ctrl+B) · 글자 크기(Ctrl+Shift+> / <, Ctrl+. / ,) · "1. " 번호 목록 · Tab 하위 목록 1) a)
+ * 기능: 굵게(Ctrl+B) · 글자 크기(Ctrl+Shift+> / <, Ctrl+. / ,) · 글자 색(색 버튼, Ctrl+Shift+H 최근 색) · "1. " 번호 목록 · Tab 하위 목록 1) a)
  *       "- " 글머리 목록 · -> → / <- ← 자동 변환 · 이모지 버튼 · 붙여넣기는 글자만 · Ctrl+Enter 제출
  *
  * 사용법 A (문자열 템플릿으로 화면을 그리는 앱):
@@ -797,6 +805,21 @@
   'use strict';
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 
+  /* ---------- 글자 색: 어두운·밝은 배경 모두에서 읽히는 중간 톤만 제공 ---------- */
+  const COLORS = [
+    ['빨강', '#e5484d'], ['주황', '#e8730c'], ['노랑', '#c99a06'], ['초록', '#2f9e44'],
+    ['파랑', '#3b82f6'], ['보라', '#9b59d0'], ['회색', '#8c959f']
+  ];
+  const ALLOWED_COLORS = new Set(COLORS.map(c => c[1]));
+  const NO_COLOR = '#010203'; // '기본색'으로 되돌릴 때 잠깐 쓰는 표시용 색
+  // 저장에는 팔레트 색만 남긴다 (#rrggbb 또는 rgb(...) 를 받아 소문자 #rrggbb 로)
+  function hexColor(v){
+    v = String(v || '').trim().toLowerCase();
+    const m = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/.exec(v);
+    if(m) v = '#' + m.slice(1).map(x => Math.min(255, +x).toString(16).padStart(2, '0')).join('');
+    return ALLOWED_COLORS.has(v) ? v : '';
+  }
+
   /* ---------- 저장용 정리: 허용한 태그만 남기고 속성은 모두 제거 (스크립트·이벤트 속성 차단) ---------- */
   const OK = new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','OL','UL','LI','FONT']);
   function clean(html){
@@ -806,11 +829,18 @@
         if(/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|TEMPLATE|META|LINK|IMG|SVG|VIDEO|AUDIO|FORM|INPUT|BUTTON)$/i.test(n.tagName)){ n.remove(); return; }
         walk(n);
         let el2 = n;
+        const spanColor = n.tagName === 'SPAN' ? hexColor((/(?:^|;)\s*color:\s*([^;]+)/i.exec(n.getAttribute('style') || '') || [])[1]) : '';
         if(n.tagName === 'SPAN' && /font-weight:\s*(bold|[6-9]00)/i.test(n.getAttribute('style') || '')){ el2 = document.createElement('b'); el2.append(...n.childNodes); n.replaceWith(el2); }
+        else if(spanColor){ el2 = document.createElement('font'); el2.setAttribute('color', spanColor); el2.append(...n.childNodes); n.replaceWith(el2); }
         else if(!OK.has(n.tagName)){ n.replaceWith(...n.childNodes); return; }
         const size = el2.tagName === 'FONT' ? el2.getAttribute('size') : null;
+        const color = el2.tagName === 'FONT' ? hexColor(el2.getAttribute('color')) : '';
         Array.from(el2.attributes).forEach(a => el2.removeAttribute(a.name));
-        if(el2.tagName === 'FONT'){ if(/^[1-7]$/.test(size || '')) el2.setAttribute('size', size); else el2.replaceWith(...el2.childNodes); }
+        if(el2.tagName === 'FONT'){
+          if(/^[1-7]$/.test(size || '')) el2.setAttribute('size', size);
+          if(color) el2.setAttribute('color', color);
+          if(!el2.attributes.length) el2.replaceWith(...el2.childNodes);
+        }
       } else if(n.nodeType !== 3) n.remove();
     }); };
     walk(t.content); return t.innerHTML;
@@ -848,11 +878,14 @@
       + '<button type="button" data-ne="bold" title="굵게 (Ctrl+B)"><b>B</b></button>'
       + '<button type="button" data-ne="bigger" title="글자 크게 (Ctrl+Shift+&gt;)">A<small>+</small></button>'
       + '<button type="button" data-ne="smaller" title="글자 작게 (Ctrl+Shift+&lt;)">A<small>−</small></button>'
+      + '<button type="button" data-ne="color" title="글자 색 (Ctrl+Shift+H: 최근 색 다시 칠하기)" aria-label="글자 색"><span class="ne-color-ico">A</span></button>'
       + '<button type="button" data-ne="ol" title="번호 목록 (1. 쓰고 띄어쓰기)">1.</button>'
       + '<button type="button" data-ne="ul" title="글머리 목록 (- 쓰고 띄어쓰기)">•</button>'
       + '<button type="button" data-ne="emoji" title="이모지 (Windows + . 도 돼요)">😀</button>'
       + (o.hint === false ? '' : '<span class="ne-hint">1. 띄어쓰기 → 번호 목록 · Tab 들여쓰기 · -&gt; 는 →</span>')
       + '<div class="ne-emojis">' + EMOJIS.map(e => '<button type="button" data-ne-emo="' + e + '">' + e + '</button>').join('') + '</div>'
+      + '<div class="ne-colors"><button type="button" class="ne-color-default" data-ne-color="" title="기본색">A<span>기본</span></button>'
+      + COLORS.map(c => '<button type="button" data-ne-color="' + c[1] + '" title="' + c[0] + '" style="color:' + c[1] + '">A<span>' + c[0] + '</span></button>').join('') + '</div>'
       + '</div><div class="ne-rte" contenteditable="true"' + (o.submitOnCtrlEnter ? ' data-ne-submit="1"' : '')
       + ' data-ph="' + esc(o.placeholder || '') + '">' + clean(o.html || '') + '</div></div>';
   }
@@ -869,6 +902,20 @@
     const next = Math.min(7, Math.max(1, cur + dir)); if(next === cur) return;
     document.execCommand('styleWithCSS', false, false);
     document.execCommand('fontSize', false, String(next));
+  }
+  // 글자 색 칠하기. color 가 빈 값이면 기본색으로 되돌린다.
+  let lastColor = COLORS[0][1];
+  function setColor(ed, color){
+    if(document.activeElement !== ed) focusEnd(ed);
+    document.execCommand('styleWithCSS', false, false);
+    if(color){ document.execCommand('foreColor', false, color); lastColor = color; }
+    else {
+      document.execCommand('foreColor', false, NO_COLOR);
+      ed.querySelectorAll('font').forEach(f => { if((f.getAttribute('color') || '').toLowerCase() === NO_COLOR){
+        f.removeAttribute('color'); if(!f.attributes.length) f.replaceWith(...f.childNodes); } });
+      ed.querySelectorAll('span').forEach(s => { if(hexColor(s.style.color) === '' && /rgb\(1, 2, 3\)/.test(s.style.color)){ s.style.color = ''; if(!s.getAttribute('style')) s.replaceWith(...s.childNodes); } });
+    }
+    changed(ed);
   }
   function cmd(ed, c){
     if(document.activeElement !== ed) focusEnd(ed);
@@ -906,12 +953,15 @@
   const edOf = t => t && t.closest ? t.closest('.ne-rte') : null;
 
   document.addEventListener('mousedown', e => {
-    const b = e.target.closest && e.target.closest('[data-ne],[data-ne-emo]');
-    if(!b){ if(!(e.target.closest && e.target.closest('.ne-emojis'))) document.querySelectorAll('.ne-emojis.open').forEach(x => x.classList.remove('open')); return; }
+    const b = e.target.closest && e.target.closest('[data-ne],[data-ne-emo],[data-ne-color]');
+    if(!b){ if(!(e.target.closest && e.target.closest('.ne-emojis,.ne-colors'))) document.querySelectorAll('.ne-emojis.open,.ne-colors.open').forEach(x => x.classList.remove('open')); return; }
     e.preventDefault(); // 버튼을 눌러도 편집기의 커서·선택 영역을 잃지 않게
     const wrap = b.closest('.ne-wrap'), ed = wrap && wrap.querySelector('.ne-rte'); if(!ed) return;
-    if(b.dataset.neEmo){ if(document.activeElement !== ed) focusEnd(ed); document.execCommand('insertText', false, b.dataset.neEmo); wrap.querySelector('.ne-emojis').classList.remove('open'); changed(ed); return; }
-    if(b.dataset.ne === 'emoji'){ wrap.querySelector('.ne-emojis').classList.toggle('open'); return; }
+    const emojis = wrap.querySelector('.ne-emojis'), colors = wrap.querySelector('.ne-colors');
+    if(b.dataset.neEmo){ if(document.activeElement !== ed) focusEnd(ed); document.execCommand('insertText', false, b.dataset.neEmo); emojis.classList.remove('open'); changed(ed); return; }
+    if(b.dataset.neColor !== undefined){ setColor(ed, b.dataset.neColor); colors.classList.remove('open'); return; }
+    if(b.dataset.ne === 'emoji'){ colors.classList.remove('open'); emojis.classList.toggle('open'); return; }
+    if(b.dataset.ne === 'color'){ emojis.classList.remove('open'); colors.classList.toggle('open'); return; }
     cmd(ed, b.dataset.ne);
   });
   document.addEventListener('input', e => {
@@ -937,6 +987,7 @@
         if(ed.dataset.neSubmit){ const f = ed.closest('form'); if(f){ e.preventDefault(); f.requestSubmit(); } }
         return;
       }
+      if(e.shiftKey && e.code === 'KeyH'){ e.preventDefault(); setColor(ed, lastColor); return; }
       if(e.key === '>' || e.code === 'Period'){ e.preventDefault(); fontStep(1); changed(ed); return; }
       if(e.key === '<' || e.code === 'Comma'){ e.preventDefault(); fontStep(-1); changed(ed); return; }
     }
@@ -956,7 +1007,7 @@
     };
   }
 
-  window.NotionEditor = { box, mount, clean, toText, textToHTML, focusEnd, EMOJIS };
+  window.NotionEditor = { box, mount, clean, toText, textToHTML, focusEnd, setColor, EMOJIS, COLORS };
 })();
 
   </script>
