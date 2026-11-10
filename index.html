@@ -353,6 +353,9 @@
     .memo-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .memo-card-head time { color: var(--muted); font-size: 10px; }
     .memo-card .delete-task { flex: none; opacity: 1; }
+    .memo-card-actions { display: flex; flex: none; align-items: center; gap: 4px; }
+    .memo-copy { height: 26px; padding: 0 9px; border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line)); border-radius: 6px; background: transparent; color: var(--accent); font: inherit; font-size: 11px; font-weight: 750; cursor: pointer; }
+    .memo-copy:hover { background: var(--accent-soft); }
     .memo-preview { display: -webkit-box; overflow: hidden; margin: 10px 0 0; color: var(--ink); font-size: 13px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
     .memo-grid-empty { grid-column: 1 / -1; }
     .schedule-layout { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 18px; align-items: start; }
@@ -785,7 +788,10 @@
 /* 노션식 메모 편집기 (Notion-style memo editor)
  * 의존성 없음 · 브라우저 기본 contenteditable + execCommand 사용
  * 기능: 굵게(Ctrl+B) · 글자 크기(Ctrl+Shift+> / <, Ctrl+. / ,) · 글자 색(색 버튼, Ctrl+Shift+H 최근 색) · "1. " 번호 목록 · Tab 하위 목록 1) a)
- *       "- " 글머리 목록 · -> → / <- ← 자동 변환 · 이모지 버튼 · 붙여넣기는 글자만 · Ctrl+Enter 제출
+ *       "- " 글머리 목록 · -> → / <- ← 자동 변환 · 이모지 버튼 · Ctrl+Enter 제출
+ *       복사: 앱 테마 색 없이 깨끗한 HTML + 번호 붙은 글자로 담아 메일·워드·노션·카톡에 붙여도 모양 유지
+ *       붙여넣기: 이 편집기에서 복사한 건 서식 그대로, 다른 곳에서 온 건 글자만
+ *       메모 전체 복사 버튼: NotionEditor.copy(저장된HTML) → Promise<boolean>
  *
  * 사용법 A (문자열 템플릿으로 화면을 그리는 앱):
  *   html += NotionEditor.box({ html: 저장된HTML, placeholder: '메모를 입력하세요', submitOnCtrlEnter: true });
@@ -952,6 +958,39 @@
   }
   const edOf = t => t && t.closest ? t.closest('.ne-rte') : null;
 
+  /* ---------- 복사 (메일·워드·노션·카톡에 붙여도 모양 유지) ---------- */
+  const COPY_MARK = 'data-ne-copy';
+  // 다른 프로그램용 HTML: 허용 태그만, 앱 테마 색 없이. 표시(data-ne-copy)로 우리 편집기 복사본임을 알아본다.
+  function exportHTML(html){
+    return '<div ' + COPY_MARK + '="1" style="white-space:pre-wrap">' + clean(html) + '</div>';
+  }
+  // 선택 영역을 HTML 로. 목록 항목 여러 개를 고르면 바깥 목록(ol/ul)까지 감싸 번호 구조를 지킨다.
+  function selectionHTML(range, anc, ed){
+    const frag = range.cloneContents();
+    let node = frag;
+    if(Array.from(frag.childNodes).some(n => n.nodeName === 'LI')){
+      for(let p = anc; p && p !== ed; p = p.parentNode){
+        if(/^(OL|UL|LI)$/.test(p.nodeName)){ const w = p.cloneNode(false); w.appendChild(node); node = w; }
+      }
+    }
+    const d = document.createElement('div'); d.appendChild(node); return d.innerHTML;
+  }
+  // 메모 전체 복사 (복사 버튼용). 성공하면 true.
+  function copy(html){
+    html = clean(html || ''); const text = toText(html), rich = exportHTML(html);
+    let done = false;
+    const h = e => { e.clipboardData.setData('text/plain', text); e.clipboardData.setData('text/html', rich); e.preventDefault(); e.stopImmediatePropagation(); done = true; };
+    document.addEventListener('copy', h, true);
+    try{ document.execCommand('copy'); }catch(_){}
+    document.removeEventListener('copy', h, true);
+    if(done) return Promise.resolve(true);
+    if(navigator.clipboard && window.ClipboardItem){
+      return navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([rich], { type:'text/html' }), 'text/plain': new Blob([text], { type:'text/plain' }) })])
+        .then(() => true, () => navigator.clipboard.writeText(text).then(() => true, () => false));
+    }
+    return Promise.resolve(false);
+  }
+
   document.addEventListener('mousedown', e => {
     const b = e.target.closest && e.target.closest('[data-ne],[data-ne-emo],[data-ne-color]');
     if(!b){ if(!(e.target.closest && e.target.closest('.ne-emojis,.ne-colors'))) document.querySelectorAll('.ne-emojis.open,.ne-colors.open').forEach(x => x.classList.remove('open')); return; }
@@ -968,10 +1007,33 @@
     const ed = edOf(e.target); if(!ed) return; changed(ed);
     if(e.inputType === 'insertText' && /^[  >-]$/.test(e.data || '')){ const d = e.data; setTimeout(() => { auto(ed, d); changed(ed); }, 0); }
   });
+  // 붙여넣기: 이 편집기에서 복사한 내용은 목록·굵게·색 그대로, 다른 곳(웹페이지 등)에서 온 건 글자만
   document.addEventListener('paste', e => {
     const ed = edOf(e.target); if(!ed) return;
-    e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+    e.preventDefault();
+    const cd = e.clipboardData || window.clipboardData;
+    const html = cd.getData ? cd.getData('text/html') : '';
+    if(html && html.indexOf(COPY_MARK) > -1){
+      const t = document.createElement('template'); t.innerHTML = html;
+      const mine = t.content.querySelector('[' + COPY_MARK + ']');
+      document.execCommand('insertHTML', false, clean(mine ? mine.innerHTML : html));
+      changed(ed); return;
+    }
+    document.execCommand('insertText', false, cd.getData('text/plain'));
   });
+  // 복사·잘라내기: 앱 화면 색(어두운 테마 글자색·배경)이 따라가지 않게 깨끗한 HTML + 번호 붙은 글자로 바꿔 담는다
+  function onCopy(e, cut){
+    const s = getSelection(); if(!s.rangeCount || s.isCollapsed) return;
+    const r = s.getRangeAt(0); let anc = r.commonAncestorContainer; if(anc.nodeType !== 1) anc = anc.parentNode;
+    const ed = anc.closest && anc.closest('.ne-rte,.ne-view'); if(!ed) return; // 편집기와 읽기 전용 보기 둘 다
+    const html = selectionHTML(r, anc, ed);
+    e.clipboardData.setData('text/plain', toText(html));
+    e.clipboardData.setData('text/html', exportHTML(html));
+    e.preventDefault();
+    if(cut && ed.classList.contains('ne-rte')){ document.execCommand('delete'); changed(ed); }
+  }
+  document.addEventListener('copy', e => onCopy(e, false));
+  document.addEventListener('cut', e => onCopy(e, true));
   document.addEventListener('keydown', e => {
     const ed = edOf(e.target); if(!ed) return;
     if(e.key === 'Tab'){
@@ -1007,7 +1069,7 @@
     };
   }
 
-  window.NotionEditor = { box, mount, clean, toText, textToHTML, focusEnd, setColor, EMOJIS, COLORS };
+  window.NotionEditor = { box, mount, clean, toText, textToHTML, focusEnd, setColor, copy, exportHTML, EMOJIS, COLORS };
 })();
 
   </script>
@@ -1801,7 +1863,7 @@
           const preview = Array.from(memo.text);
           const text = preview.slice(0, 180).join("");
           return `<article class="memo-card" data-search="${escapeHtml(memo.text.toLocaleLowerCase())}">
-            <div class="memo-card-head"><time>${escapeHtml(new Date(memo.createdAt).toLocaleString("ko-KR"))}</time><button type="button" class="delete-task" data-action="delete-memo" data-id="${escapeHtml(memo.id)}" aria-label="메모 삭제">×</button></div>
+            <div class="memo-card-head"><time>${escapeHtml(new Date(memo.createdAt).toLocaleString("ko-KR"))}</time><div class="memo-card-actions"><button type="button" class="memo-copy" data-action="copy-memo" data-id="${escapeHtml(memo.id)}" title="목록·굵게·색을 살려 복사해요. 메일·문서·메신저에 바로 붙여넣으세요." aria-label="메모 복사">복사</button><button type="button" class="delete-task" data-action="delete-memo" data-id="${escapeHtml(memo.id)}" aria-label="메모 삭제">×</button></div></div>
             <p class="memo-preview">${escapeHtml(text)}${preview.length > 180 ? "…" : ""}</p>
           </article>`;
         }).join("");
@@ -2312,6 +2374,14 @@ ${url}
             console.error("공유 경조사를 삭제하지 못했습니다.", error);
             showToast("경조사 삭제에 실패했어요. 연결 상태와 관리자 권한을 확인해주세요.");
           }
+        }
+        if (action.dataset.action === "copy-memo") {
+          const memo = data.memos.find(item => item.id === action.dataset.id);
+          if (!memo) return;
+          const copied = await NotionEditor.copy(memo.html || NotionEditor.textToHTML(memo.text));
+          if (!copied) console.error("메모를 클립보드에 복사하지 못했습니다.");
+          showToast(copied ? "메모를 복사했어요. 원하는 곳에 붙여넣으세요." : "복사하지 못했어요. 브라우저의 클립보드 권한을 확인해주세요.");
+          return;
         }
         if (action.dataset.action === "delete-memo") {
           data.memos = data.memos.filter(item => item.id !== action.dataset.id);
