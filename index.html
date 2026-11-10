@@ -614,6 +614,50 @@
       .note-preview { width: calc(100% - 25px); margin-left: 25px; margin-top: -2px; }
       .top-wisdom { margin: -9px auto 18px; }
     }
+    /* ===== 노션식 메모 편집기 (notion-memo-editor 스킬) ===== */
+/* 노션식 메모 편집기 스타일
+ * 앱에 같은 이름의 색 변수가 있으면 그걸 따르고, 없으면 괄호 안 기본값을 써요.
+ * 리얼워크 기본 키컬러(남색 #1B3A6B)를 쓰려면 --accent 를 앱에서 지정하세요. */
+.ne-wrap{border:1px solid var(--line,#D0D7DE);border-radius:10px;background:var(--input,#FFFFFF);color:var(--ink,#1F2328)}
+.ne-wrap:focus-within{border-color:var(--accent,#1B3A6B);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent,#1B3A6B) 20%,transparent)}
+.ne-bar{position:relative;display:flex;align-items:center;gap:2px;flex-wrap:wrap;padding:6px 8px;border-bottom:1px solid var(--line2,#EAEEF2)}
+.ne-bar > button{border:1px solid transparent;background:transparent;border-radius:7px;min-width:34px;height:32px;padding:0 8px;font:inherit;font-size:14.5px;color:inherit;line-height:1;cursor:pointer}
+.ne-bar > button small{font-size:11px;margin-left:1px}
+.ne-bar > button:hover{background:var(--hover,#F3F5F7);border-color:var(--line,#D0D7DE)}
+.ne-hint{margin-left:auto;font-size:12px;color:var(--faint,#8C959F);padding-left:8px}
+.ne-rte{min-height:120px;padding:12px 14px;outline:none;font-size:16px;line-height:1.7;word-break:break-word;white-space:pre-wrap}
+.ne-rte:empty::before{content:attr(data-ph);color:var(--ph,#8C959F);pointer-events:none}
+.ne-rte ol,.ne-rte ul{margin:2px 0;padding-left:28px}
+.ne-rte ol ol > li::marker{content:counter(list-item) ") "}
+.ne-rte ol ol ol > li::marker{content:counter(list-item, lower-alpha) ") "}
+.ne-rte b,.ne-rte strong{font-weight:700}
+.ne-emojis{position:absolute;top:calc(100% + 4px);left:8px;z-index:30;display:none;grid-template-columns:repeat(9,36px);gap:2px;padding:8px;background:var(--modal,#FFFFFF);border:1px solid var(--line,#D0D7DE);border-radius:12px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.ne-emojis.open{display:grid}
+.ne-emojis button{border:0;background:transparent;border-radius:8px;height:36px;font-size:20px;padding:0;cursor:pointer}
+.ne-emojis button:hover{background:var(--hover,#F3F5F7)}
+/* 저장된 메모를 읽기 전용으로 보여줄 때: <div class="ne-view">${clean(html)}</div> */
+.ne-view{line-height:1.7;word-break:break-word;white-space:pre-wrap}
+.ne-view ol,.ne-view ul{margin:2px 0;padding-left:28px}
+.ne-view ol ol > li::marker{content:counter(list-item) ") "}
+.ne-view ol ol ol > li::marker{content:counter(list-item, lower-alpha) ") "}
+@media (max-width:760px){.ne-hint{display:none}.ne-emojis{grid-template-columns:repeat(6,40px)}}
+
+    /* 앱 맞춤: 노션식 편집기 */
+    .task-detail .ne-rte { min-height: 90px; max-height: 420px; overflow: auto; }
+    .quick-form .ne-rte { min-height: 100px; max-height: 50vh; overflow: auto; }
+    .field .ne-rte { min-height: 90px; }
+    .profile-work .ne-view { margin: 5px 0 0; color: #e6f1ed; font-size: 12px; line-height: 1.6; }
+    /* 삭제 확인 창 */
+    .confirm-dialog { width: min(400px, calc(100% - 32px)); max-width: none; padding: 0; border: 1px solid var(--line); border-radius: 16px; background: var(--card); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,.4); }
+    .confirm-dialog::backdrop { background: rgba(0,0,0,.66); }
+    .confirm-content { padding: 24px; }
+    .confirm-content h2 { margin: 0 0 8px; font-size: 19px; }
+    .confirm-content p { margin: 0; color: var(--muted); line-height: 1.7; overflow-wrap: anywhere; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+    .confirm-actions button { min-height: 38px; padding: 0 16px; border: 1px solid var(--line); border-radius: 9px; background: var(--card-muted); color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+    .confirm-actions button:hover { background: var(--hover); }
+    .confirm-actions .confirm-danger { border-color: var(--danger); background: var(--danger); color: #fff; }
+    .confirm-actions .confirm-danger:hover { background: color-mix(in srgb, var(--danger) 85%, #000); }
   </style>
 </head>
 <body>
@@ -716,9 +760,206 @@
       </div>
     </div>
   </dialog>
+  <dialog id="confirmDialog" class="confirm-dialog" aria-labelledby="confirmTitle" aria-describedby="confirmMessage">
+    <form method="dialog" class="confirm-content">
+      <h2 id="confirmTitle">일정을 삭제할까요?</h2>
+      <p id="confirmMessage"></p>
+      <div class="confirm-actions">
+        <button type="submit" value="cancel" id="confirmCancel">취소</button>
+        <button type="submit" value="ok" class="confirm-danger" id="confirmOk">삭제</button>
+      </div>
+    </form>
+  </dialog>
   <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+/* 노션식 메모 편집기 (Notion-style memo editor)
+ * 의존성 없음 · 브라우저 기본 contenteditable + execCommand 사용
+ * 기능: 굵게(Ctrl+B) · 글자 크기(Ctrl+Shift+> / <, Ctrl+. / ,) · "1. " 번호 목록 · Tab 하위 목록 1) a)
+ *       "- " 글머리 목록 · -> → / <- ← 자동 변환 · 이모지 버튼 · 붙여넣기는 글자만 · Ctrl+Enter 제출
+ *
+ * 사용법 A (문자열 템플릿으로 화면을 그리는 앱):
+ *   html += NotionEditor.box({ html: 저장된HTML, placeholder: '메모를 입력하세요', submitOnCtrlEnter: true });
+ *   저장할 때: const ed = form.querySelector('.ne-rte');
+ *              const html = NotionEditor.clean(ed.innerHTML), text = NotionEditor.toText(ed);
+ *   내용이 바뀔 때마다 ed 에서 'ne-change' 이벤트가 올라와요 (detail.html) → 임시 저장에 쓰세요.
+ *
+ * 사용법 B (요소에 바로 붙이기):
+ *   const editor = NotionEditor.mount(document.getElementById('box'), { html:'', placeholder:'…', onChange: html => {}, onSubmit: () => {} });
+ *   editor.getHTML() · editor.getText() · editor.setHTML(h) · editor.clear() · editor.focus()
+ *
+ * 저장은 항상 { html: clean(...) , text: toText(...) } 두 가지를 같이 하세요.
+ *   html → 다시 열 때 편집기에 넣기 / text → 카드 미리보기 · 검색
+ * 예전 글자(plain text) 데이터는 NotionEditor.textToHTML(text) 로 바꿔 넣으면 그대로 열려요.
+ */
+(function(){
+  'use strict';
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+  /* ---------- 저장용 정리: 허용한 태그만 남기고 속성은 모두 제거 (스크립트·이벤트 속성 차단) ---------- */
+  const OK = new Set(['B','STRONG','I','EM','U','S','STRIKE','BR','DIV','P','OL','UL','LI','FONT']);
+  function clean(html){
+    const t = document.createElement('template'); t.innerHTML = html || '';
+    const walk = el => { Array.from(el.childNodes).forEach(n => {
+      if(n.nodeType === 1){
+        if(/^(SCRIPT|STYLE|IFRAME|OBJECT|EMBED|TEMPLATE|META|LINK|IMG|SVG|VIDEO|AUDIO|FORM|INPUT|BUTTON)$/i.test(n.tagName)){ n.remove(); return; }
+        walk(n);
+        let el2 = n;
+        if(n.tagName === 'SPAN' && /font-weight:\s*(bold|[6-9]00)/i.test(n.getAttribute('style') || '')){ el2 = document.createElement('b'); el2.append(...n.childNodes); n.replaceWith(el2); }
+        else if(!OK.has(n.tagName)){ n.replaceWith(...n.childNodes); return; }
+        const size = el2.tagName === 'FONT' ? el2.getAttribute('size') : null;
+        Array.from(el2.attributes).forEach(a => el2.removeAttribute(a.name));
+        if(el2.tagName === 'FONT'){ if(/^[1-7]$/.test(size || '')) el2.setAttribute('size', size); else el2.replaceWith(...el2.childNodes); }
+      } else if(n.nodeType !== 3) n.remove();
+    }); };
+    walk(t.content); return t.innerHTML;
+  }
+
+  /* ---------- 미리보기 · 검색용 글자 (목록 번호 포함: 1. / 1) / •) ---------- */
+  function toText(rootOrHtml){
+    let root = rootOrHtml;
+    if(typeof rootOrHtml === 'string'){ const t = document.createElement('template'); t.innerHTML = clean(rootOrHtml); root = t.content; }
+    const lines = []; let cur = '';
+    const flush = () => { lines.push(cur); cur = ''; };
+    const walk = (n, lvl) => {
+      if(n.nodeType === 3){ cur += n.nodeValue.replace(/ /g, ' ').replace(/​/g, ''); return; }
+      if(n.nodeType !== 1) return;
+      const t = n.tagName;
+      if(t === 'BR'){ flush(); return; }
+      if(t === 'OL' || t === 'UL'){ if(cur) flush(); let i = 0;
+        Array.from(n.childNodes).forEach(c => { if(c.tagName === 'LI'){ i++; cur = '  '.repeat(lvl) + (t === 'UL' ? '• ' : lvl ? i + ') ' : i + '. '); Array.from(c.childNodes).forEach(cc => walk(cc, lvl + 1)); if(cur) flush(); } else walk(c, lvl + 1); });
+        return; }
+      const block = /^(DIV|P|LI)$/.test(t);
+      if(block && cur) flush();
+      Array.from(n.childNodes).forEach(c => walk(c, lvl));
+      if(block && cur) flush();
+    };
+    Array.from(root.childNodes).forEach(c => walk(c, 0)); if(cur) flush();
+    return lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  const textToHTML = s => esc(s || '').replace(/\n/g, '<br>');
+
+  /* ---------- 화면 ---------- */
+  const EMOJIS = ['😀','😂','😊','😍','🤔','😅','😭','😎','👍','👏','🙏','💪','🔥','✨','🎉','✅','❌','⚠️','❗','❓','💡','📌','📎','📝','📅','⏰','🚀','🎯','💬','👀','❤️','⭐','☕','📊','📈','🤝'];
+  function box(o){
+    o = o || {};
+    return '<div class="ne-wrap"><div class="ne-bar">'
+      + '<button type="button" data-ne="bold" title="굵게 (Ctrl+B)"><b>B</b></button>'
+      + '<button type="button" data-ne="bigger" title="글자 크게 (Ctrl+Shift+&gt;)">A<small>+</small></button>'
+      + '<button type="button" data-ne="smaller" title="글자 작게 (Ctrl+Shift+&lt;)">A<small>−</small></button>'
+      + '<button type="button" data-ne="ol" title="번호 목록 (1. 쓰고 띄어쓰기)">1.</button>'
+      + '<button type="button" data-ne="ul" title="글머리 목록 (- 쓰고 띄어쓰기)">•</button>'
+      + '<button type="button" data-ne="emoji" title="이모지 (Windows + . 도 돼요)">😀</button>'
+      + (o.hint === false ? '' : '<span class="ne-hint">1. 띄어쓰기 → 번호 목록 · Tab 들여쓰기 · -&gt; 는 →</span>')
+      + '<div class="ne-emojis">' + EMOJIS.map(e => '<button type="button" data-ne-emo="' + e + '">' + e + '</button>').join('') + '</div>'
+      + '</div><div class="ne-rte" contenteditable="true"' + (o.submitOnCtrlEnter ? ' data-ne-submit="1"' : '')
+      + ' data-ph="' + esc(o.placeholder || '') + '">' + clean(o.html || '') + '</div></div>';
+  }
+
+  /* ---------- 동작 ---------- */
+  function focusEnd(ed){ ed.focus(); const r = document.createRange(); r.selectNodeContents(ed); r.collapse(false); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+  function changed(ed){
+    if(ed.textContent === '' && !ed.querySelector('li')) ed.innerHTML = '';  // 빈 칸이면 안내 문구가 다시 보이게
+    ed.dispatchEvent(new CustomEvent('ne-change', { bubbles:true, detail:{ html: ed.innerHTML } }));
+    if(ed._ne && ed._ne.onChange) ed._ne.onChange(ed.innerHTML);
+  }
+  function fontStep(dir){
+    const cur = Number(document.queryCommandValue('fontSize')) || 3;
+    const next = Math.min(7, Math.max(1, cur + dir)); if(next === cur) return;
+    document.execCommand('styleWithCSS', false, false);
+    document.execCommand('fontSize', false, String(next));
+  }
+  function cmd(ed, c){
+    if(document.activeElement !== ed) focusEnd(ed);
+    if(c === 'bold') document.execCommand('bold');
+    else if(c === 'ol') document.execCommand('insertOrderedList');
+    else if(c === 'ul') document.execCommand('insertUnorderedList');
+    else if(c === 'bigger') fontStep(1);
+    else if(c === 'smaller') fontStep(-1);
+    changed(ed);
+  }
+  function lineStart(node, ed){
+    let n = node;
+    while(n && n !== ed && !/^(DIV|P|LI)$/.test(n.nodeName)){
+      const p = n.previousSibling;
+      if(p && p.nodeName !== 'BR' && !/^(DIV|P|OL|UL)$/.test(p.nodeName) && p.textContent) return false;
+      n = n.parentNode;
+    }
+    return true;
+  }
+  // 자동 변환은 입력 이벤트가 끝난 뒤(setTimeout 0) 실행해요. 편집 명령 안에서 편집 명령을 다시 부르면 무시되기 때문.
+  function auto(ed, data){
+    if(document.activeElement !== ed) return;
+    const sel = getSelection(); if(!sel.rangeCount || !sel.isCollapsed) return;
+    const node = sel.anchorNode, off = sel.anchorOffset;
+    if(!node || node.nodeType !== 3 || !ed.contains(node)) return;
+    const before = node.nodeValue.slice(0, off);
+    const pick = (a, b) => { const r = document.createRange(); r.setStart(node, a); r.setEnd(node, b); sel.removeAllRanges(); sel.addRange(r); };
+    if(data === '>' && before.endsWith('->')){ pick(off - 2, off); document.execCommand('insertText', false, '→'); return; }
+    if(data === '-' && before.endsWith('<-')){ pick(off - 2, off); document.execCommand('insertText', false, '←'); return; }
+    if((data === ' ' || data === ' ') && !(node.parentElement && node.parentElement.closest('li')) && lineStart(node, ed)){
+      if(/^1[.)][\s ]$/.test(before)){ pick(0, off); document.execCommand('delete'); document.execCommand('insertOrderedList'); }
+      else if(/^[-*][\s ]$/.test(before)){ pick(0, off); document.execCommand('delete'); document.execCommand('insertUnorderedList'); }
+    }
+  }
+  const edOf = t => t && t.closest ? t.closest('.ne-rte') : null;
+
+  document.addEventListener('mousedown', e => {
+    const b = e.target.closest && e.target.closest('[data-ne],[data-ne-emo]');
+    if(!b){ if(!(e.target.closest && e.target.closest('.ne-emojis'))) document.querySelectorAll('.ne-emojis.open').forEach(x => x.classList.remove('open')); return; }
+    e.preventDefault(); // 버튼을 눌러도 편집기의 커서·선택 영역을 잃지 않게
+    const wrap = b.closest('.ne-wrap'), ed = wrap && wrap.querySelector('.ne-rte'); if(!ed) return;
+    if(b.dataset.neEmo){ if(document.activeElement !== ed) focusEnd(ed); document.execCommand('insertText', false, b.dataset.neEmo); wrap.querySelector('.ne-emojis').classList.remove('open'); changed(ed); return; }
+    if(b.dataset.ne === 'emoji'){ wrap.querySelector('.ne-emojis').classList.toggle('open'); return; }
+    cmd(ed, b.dataset.ne);
+  });
+  document.addEventListener('input', e => {
+    const ed = edOf(e.target); if(!ed) return; changed(ed);
+    if(e.inputType === 'insertText' && /^[  >-]$/.test(e.data || '')){ const d = e.data; setTimeout(() => { auto(ed, d); changed(ed); }, 0); }
+  });
+  document.addEventListener('paste', e => {
+    const ed = edOf(e.target); if(!ed) return;
+    e.preventDefault(); document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+  });
+  document.addEventListener('keydown', e => {
+    const ed = edOf(e.target); if(!ed) return;
+    if(e.key === 'Tab'){
+      e.preventDefault();
+      const s = getSelection(), n = s.anchorNode, el = n && (n.nodeType === 1 ? n : n.parentElement);
+      if(el && el.closest('li') && ed.contains(el)) document.execCommand(e.shiftKey ? 'outdent' : 'indent');
+      else if(!e.shiftKey) document.execCommand('insertText', false, '    ');
+      changed(ed); return;
+    }
+    if((e.ctrlKey || e.metaKey) && !e.altKey){
+      if(e.key === 'Enter'){
+        if(ed._ne && ed._ne.onSubmit){ e.preventDefault(); ed._ne.onSubmit(); return; }
+        if(ed.dataset.neSubmit){ const f = ed.closest('form'); if(f){ e.preventDefault(); f.requestSubmit(); } }
+        return;
+      }
+      if(e.key === '>' || e.code === 'Period'){ e.preventDefault(); fontStep(1); changed(ed); return; }
+      if(e.key === '<' || e.code === 'Comma'){ e.preventDefault(); fontStep(-1); changed(ed); return; }
+    }
+  });
+
+  function mount(target, o){
+    o = o || {};
+    target.innerHTML = box(o);
+    const ed = target.querySelector('.ne-rte'); ed._ne = o;
+    return {
+      el: ed,
+      getHTML: () => clean(ed.innerHTML),
+      getText: () => toText(ed),
+      setHTML: h => { ed.innerHTML = clean(h); },
+      clear: () => { ed.innerHTML = ''; },
+      focus: () => focusEnd(ed)
+    };
+  }
+
+  window.NotionEditor = { box, mount, clean, toText, textToHTML, focusEnd, EMOJIS };
+})();
+
+  </script>
   <script>
     (() => {
       const DATA_KEY = "realwork-member-note-v1";
@@ -1252,16 +1493,31 @@
             <button type="button" class="move-btn" data-action="toggle-move" ${attrs}>취소</button>
           </div>` : ""}
           ${open ? `<div class="task-detail" id="${noteId}">
-            <label class="sr-only" for="${noteId}-text">세부 메모: ${escapeHtml(task.text)}</label>
-            <textarea id="${noteId}-text" class="task-note" data-action="edit-task-note" ${attrs} rows="3" maxlength="5000" placeholder="세부 내용, 진행 상황, 참고 링크 등을 자유롭게 적어보세요.">${escapeHtml(task.note || "")}</textarea>
+            ${editorBox({ html: editorHtml(task.noteHtml, task.note), placeholder: "세부 내용, 진행 상황, 참고 링크 등을 자유롭게 적어보세요." }, `세부 메모: ${task.text}`, `id="${noteId}-text" data-action="edit-task-note" ${attrs}`)}
           </div>` : (hasNote ? `<button type="button" class="note-preview" data-action="toggle-note" ${attrs} aria-label="세부 메모 열기">${escapeHtml(task.note.trim().split("\n")[0].slice(0, 80))}</button>` : "")}
           </div>`;
         }).join("")}</div>`;
       }
 
-      function autoSizeNote(area) {
-        area.style.height = "auto";
-        area.style.height = Math.min(Math.max(area.scrollHeight + 2, 76), 420) + "px";
+      // 노션식 편집기에 접근성 라벨을 붙여 그린다.
+      function editorBox(options, label, extra = "") {
+        return NotionEditor.box(options).replace('class="ne-rte" contenteditable="true"', `class="ne-rte" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(label)}" ${extra}`);
+      }
+      const editorHtml = (html, text) => html || NotionEditor.textToHTML(text || "");
+      let memoDraft = "";
+
+      // 삭제 전에 확인 창을 띄운다. '삭제'를 눌러야 true.
+      function confirmDelete(title, message, okLabel = "삭제") {
+        const dialog = $("#confirmDialog");
+        $("#confirmTitle").textContent = title;
+        $("#confirmMessage").textContent = message;
+        $("#confirmOk").textContent = okLabel;
+        dialog.returnValue = "";
+        return new Promise(resolve => {
+          dialog.addEventListener("close", () => resolve(dialog.returnValue === "ok"), { once: true });
+          dialog.showModal();
+          $("#confirmCancel").focus();
+        });
       }
 
       function composer(kind, key) {
@@ -1349,7 +1605,7 @@
         return `<section class="card card-pad">
           <div class="card-heading"><div><h2>빠른 메모</h2><p>떠오른 생각을 짧게 남겨두세요.</p></div><button class="text-link" type="button" data-page="memo">메모장 열기 ↗</button></div>
           <form class="quick-form" data-form="add-memo">
-            <textarea name="memo" maxlength="1000" placeholder="지금 떠오른 내용을 적어보세요." aria-label="빠른 메모"></textarea>
+            ${editorBox({ html: memoDraft, placeholder: "지금 떠오른 내용을 적어보세요.", submitOnCtrlEnter: true, hint: false }, "빠른 메모")}
             <button class="add-btn" type="submit">메모 저장</button>
           </form>
           ${latest.length ? `<div class="memo-list" style="margin-top:12px">${latest.map(memo => `<div class="memo-row"><div class="memo-body"><time>${escapeHtml(new Date(memo.createdAt).toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }))}</time><p class="memo-preview">${escapeHtml(memo.text)}</p></div></div>`).join("")}</div>` : ""}
@@ -1375,7 +1631,7 @@
               <section class="card profile-card">
                 <div class="card-heading"><div><h3>나의 리얼워크</h3><p>함께 일하는 나를 소개해요.</p></div><button class="text-link" type="button" data-page="profile">프로필 수정 ↗</button></div>
                 <div class="profile-info"><div><span>함께한 기간</span><strong>${escapeHtml(tenureText(data.profile.startDate))}</strong></div><div><span>로그인</span><strong>${escapeHtml(currentUser?.email || "")}</strong></div></div>
-                <div class="profile-work"><span>요즘 하는 일</span><p>${data.profile.work.trim() ? escapeHtml(data.profile.work) : "프로필에서 담당 업무를 간단히 적어주세요."}</p></div>
+                <div class="profile-work"><span>요즘 하는 일</span>${data.profile.work.trim() ? (data.profile.workHtml ? `<div class="ne-view">${NotionEditor.clean(data.profile.workHtml)}</div>` : `<p>${escapeHtml(data.profile.work)}</p>`) : "<p>프로필에서 담당 업무를 간단히 적어주세요.</p>"}</div>
               </section>
               ${dashboardAnniversaryCard()}
               <div class="tip"><strong>부담 없이 기록해요</strong>일정은 추가하고 체크하는 것만으로 충분해요. 정해진 방식 없이 내 일하는 흐름에 맞춰 사용해보세요.</div>
@@ -1482,7 +1738,7 @@
             </div></div>
             <div class="field"><label for="profileName">이름 <span style="color:var(--muted);font-weight:400">· 선택</span></label><input id="profileName" name="name" maxlength="30" value="${escapeHtml(data.profile.name)}" placeholder="이름"></div>
             <div class="field"><label for="startDate">리얼워크 입사일</label><input id="startDate" name="startDate" type="date" value="${escapeHtml(data.profile.startDate)}" max="${dateKey(today)}"></div>
-            <div class="field"><label for="profileWork">요즘 하는 일</label><textarea id="profileWork" name="work" maxlength="240" placeholder="예: 고객사 프로젝트 기획과 워크숍 운영을 맡고 있어요.">${escapeHtml(data.profile.work)}</textarea></div>
+            <div class="field"><label id="profileWorkLabel">요즘 하는 일</label>${editorBox({ html: editorHtml(data.profile.workHtml, data.profile.work), placeholder: "예: 고객사 프로젝트 기획과 워크숍 운영을 맡고 있어요.", hint: false }, "요즘 하는 일", 'id="profileWork"')}</div>
             <button class="primary" type="submit">프로필 저장</button>
           </form>
         </section>`;
@@ -1502,7 +1758,7 @@
           <h1>빠른 메모</h1><p>정리하지 않아도 괜찮아요. 먼저 적어두고 필요할 때 다시 찾아보세요.</p>
           <section class="card card-pad" style="margin-bottom:16px">
             <form class="quick-form" data-form="add-memo">
-              <textarea name="memo" maxlength="1000" placeholder="떠오른 생각, 잊고 싶지 않은 내용을 적어보세요." aria-label="새 메모"></textarea>
+              ${editorBox({ html: memoDraft, placeholder: "떠오른 생각, 잊고 싶지 않은 내용을 적어보세요.", submitOnCtrlEnter: true }, "새 메모")}
               <button class="add-btn" type="submit">메모 저장</button>
             </form>
           </section>
@@ -1553,7 +1809,6 @@
         else if (page === "invite") renderInvites();
         else renderProfile();
         updateSidebar();
-        document.querySelectorAll(".task-note").forEach(autoSizeNote);
       }
 
       const tutorialSteps = [
@@ -1896,8 +2151,8 @@ ${url}
           if (opening) openTaskNotes.add(id); else openTaskNotes.delete(id);
           render();
           if (opening) {
-            const area = document.querySelector(`.task-note[data-id="${CSS.escape(id)}"][data-kind="${el.dataset.kind}"]`);
-            if (area) { autoSizeNote(area); area.focus(); area.setSelectionRange(area.value.length, area.value.length); }
+            const editor = document.querySelector(`.ne-rte[data-action="edit-task-note"][data-id="${CSS.escape(id)}"][data-kind="${el.dataset.kind}"]`);
+            if (editor) NotionEditor.focusEnd(editor);
           }
           return;
         }
@@ -1981,6 +2236,10 @@ ${url}
         }
         if (action.dataset.action === "delete-task") {
           const schedules = action.dataset.kind === "month" ? data.monthlySchedules : data.schedules;
+          const target = (schedules[action.dataset.key] || []).find(task => task.id === action.dataset.id);
+          if (!target) return;
+          const ok = await confirmDelete("일정을 삭제할까요?", `‘${target.text}’ 일정을 정말 삭제하시겠어요? 세부 메모도 함께 지워지고 되돌릴 수 없어요.`);
+          if (!ok) return;
           const list = schedules[action.dataset.key] || [];
           schedules[action.dataset.key] = list.filter(task => task.id !== action.dataset.id);
           persist();
@@ -2132,7 +2391,10 @@ ${url}
         if (form.id === "profileForm") {
           event.preventDefault();
           const formData = new FormData(form);
-          data.profile = { ...data.profile, name: String(formData.get("name") || "").trim(), startDate: String(formData.get("startDate") || ""), work: String(formData.get("work") || "").trim() };
+          const workEditor = form.querySelector("#profileWork");
+          const work = NotionEditor.toText(workEditor);
+          if (work.length > 240) { showToast(`요즘 하는 일은 240자까지 적을 수 있어요. (지금 ${work.length}자)`); return; }
+          data.profile = { ...data.profile, name: String(formData.get("name") || "").trim(), startDate: String(formData.get("startDate") || ""), work, workHtml: work ? NotionEditor.clean(workEditor.innerHTML) : "" };
           persist();
           render();
           showToast("프로필을 저장했어요.");
@@ -2163,13 +2425,30 @@ ${url}
         }
         if (form.matches('[data-form="add-memo"]')) {
           event.preventDefault();
-          const text = String(new FormData(form).get("memo") || "").trim();
+          const editor = form.querySelector(".ne-rte");
+          const text = NotionEditor.toText(editor);
           if (!text) return;
-          data.memos.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, createdAt: new Date().toISOString() });
+          if (text.length > 1000) { showToast(`메모는 1000자까지 저장할 수 있어요. (지금 ${text.length}자)`); return; }
+          data.memos.push({ id: crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`, text, html: NotionEditor.clean(editor.innerHTML), createdAt: new Date().toISOString() });
+          memoDraft = "";
           persist();
           render();
           showToast("메모를 저장했어요.");
         }
+      });
+
+      document.addEventListener("ne-change", event => {
+        const editor = event.target;
+        if (editor.matches('[data-action="edit-task-note"]')) {
+          const task = tasksFor(editor.dataset.key, editor.dataset.kind).find(item => item.id === editor.dataset.id);
+          if (task) {
+            task.noteHtml = NotionEditor.clean(editor.innerHTML);
+            task.note = NotionEditor.toText(editor);
+            persist();
+          }
+          return;
+        }
+        if (editor.closest('[data-form="add-memo"]')) memoDraft = editor.innerHTML;
       });
 
       document.addEventListener("input", event => {
@@ -2185,15 +2464,6 @@ ${url}
           if (emptyNotes) emptyNotes.classList.toggle("hidden", Boolean(query));
           $("#memoResultCount").textContent = query ? `${visibleCount}개 검색됨` : `${data.memos.length}개`;
           $("#memoEmpty").classList.toggle("hidden", !query || visibleCount > 0);
-          return;
-        }
-        if (event.target.matches('[data-action="edit-task-note"]')) {
-          const task = tasksFor(event.target.dataset.key, event.target.dataset.kind).find(item => item.id === event.target.dataset.id);
-          if (task) {
-            task.note = event.target.value;
-            autoSizeNote(event.target);
-            persist();
-          }
           return;
         }
         if (event.target.matches('[data-action="edit-task-text"]')) {
